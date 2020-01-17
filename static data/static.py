@@ -55,39 +55,29 @@ aisTypes_normalized = frame['typeMax'].value_counts(normalize=True, dropna=False
 
 MISSING VALUES
 
+Missing values are those, that are equal to  0 or NaN.
+
+•	First loop goes trough variable names and appends missing values to a list
+•	Second loop goes trough missing values and finds counts/percentages relative to all data
+
 """
 
-
-missingMMSI = frame.loc[(frame['mmsi'] == 0.0) | (frame['mmsi'].isna())]
-missingLenght = frame.loc[(frame['length'] == 0.0) | (frame['length'].isna())]
-missingWidth = frame.loc[(frame['width'] == 0.0) | (frame['width'].isna())]
-missingMinDraught = frame.loc[(frame['minDraught'] == 0.0) | (frame['minDraught'].isna())]
-missingMaxDraught = frame.loc[(frame['maxDraught'] == 0.0) | (frame['maxDraught'].isna())]
-missingTypeMin = frame.loc[(frame['typeMin'] == 0.0) | (frame['typeMin'].isna())]
-missingTypeMax = frame.loc[(frame['typeMax'] == 0.0) | (frame['typeMax'].isna())]
-missingIMO = frame.loc[(frame['imo'] == 0.0) | (frame['imo'].isna())]
-missingShipName = frame.loc[(frame['shipName'] == 0.0) | (frame['shipName'].isna())]
-missingAISType = frame.loc[(frame['aisType'] == 0.0) | (frame['aisType'].isna())]
-missingCallSign = frame.loc[(frame['callSign'] == 0.0) | (frame['callSign'].isna())]
-missingA = frame.loc[(frame['a'] == 0.0) | (frame['a'].isna())]
-missingB = frame.loc[(frame['b'] == 0.0) | (frame['b'].isna())]
-missingC = frame.loc[(frame['c'] == 0.0) | (frame['c'].isna())]
-missingD = frame.loc[(frame['d'] == 0.0) | (frame['d'].isna())]
-
 names = ['mmsi', 'length', 'width', 'minDraught', 'maxDraught', 'typeMin', 'typeMax', 'imo', 'shipName', 'aisType', 'callSign', 'a', 'b', 'c', 'd']
-missingSize = frame.loc[(frame['length'] == 0) & (frame['width'] == 0)]
-missingSizeAndType = missingSize.loc[missingSize['typeMax'] == 0.0]
+missingValues = []
+missingCounts = []
+missingPercentages = []
 
-variables = [missingMMSI, missingLenght, missingWidth, missingMinDraught, missingMaxDraught, missingTypeMin, missingTypeMax, missingIMO, missingShipName, missingAISType, missingCallSign, missingA, missingB, missingC, missingD]
-missing = []
-missingPercentage = []
-for el in variables:
-    missing.append(len(el))
-    missingPercentage.append(len(el)*100/len(frame))
+for el in names:
+    missingVal=frame.loc[(frame[el]==0)|(frame[el].isna())]
+    missingValues.append(missingVal)
+
+for el in missingValues:
+    missingCounts.append(len(el))
+    missingPercentages.append(len(el)*100/len(frame))
 
 resultsMissingValues = pd.DataFrame({'Variable': names,
-                       'Number of missing':missing,
-                       '% of missing': np.round_(missingPercentage, decimals = 3)})
+                       'Number of missing':missingCounts,
+                       '% of missing': np.round_(missingPercentages, decimals = 3)})
 
 
 #%%
