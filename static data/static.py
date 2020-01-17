@@ -93,6 +93,7 @@ resultsMissingValues = pd.DataFrame({'Variable': names,
 #%%
 
 """
+
 Means, STDs and KDE, outliers
 
 """
@@ -113,9 +114,8 @@ smt = frame.loc[(frame['typeMax'] == 70.0) & (frame['length'] != 0) & (frame['wi
 sns.boxplot(x=smt['length']) # outliers visualisation
 
 
-"""
-z-score for removing outliers, to be finished
-"""
+
+## z-score for removing outliers, to be finished
 
 z = np.abs(stats.zscore(smt['length']))
 print(z)
