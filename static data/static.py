@@ -62,6 +62,7 @@ Missing values are those, that are equal to  0 or NaN.
 
 """
 
+
 names = ['mmsi', 'length', 'width', 'minDraught', 'maxDraught', 'typeMin', 'typeMax', 'imo', 'shipName', 'aisType', 'callSign', 'a', 'b', 'c', 'd']
 missingValues = []
 missingCounts = []
