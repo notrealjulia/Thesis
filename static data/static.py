@@ -5,7 +5,7 @@ Spyder Editor
 This is a temporary script file.
 """
 
-
+from os.path import dirname
 import pandas as pd
 import numpy as np
 import glob
@@ -32,7 +32,7 @@ AIS ship types:
 
 
 
-path = r'C:\Users\KORAL\Documents\GitHub\Thesis\static data' # use your path
+path = dirname(__file__)
 all_files = glob.glob(path + "/*.csv")
 
 li = []
