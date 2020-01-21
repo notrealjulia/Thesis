@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 
 path = dirname(__file__)
 frame = pd.read_csv(path + "/static_ship_data.csv", sep='	', index_col=None, error_bad_lines=False)
-#frame.drop_duplicates(subset=['callSign'], keep='last', inplace=True) # TO DO: Find on which identifier to drop the duplicates
+#frame.drop_duplicates(subset=['imo'], keep='last', inplace=True) # TO DO: Find on which identifier to drop the duplicates
 
 
 
@@ -93,13 +93,53 @@ ANALYSIS
 
 """
 
-# create a copy withouy missing length and width properties and lengths > 400 
-frameCopy = frame.loc[(frame['length'] != -1) | (frame['width'] != -1)]
+types = list(iwrapTypes.index.values)
+
+
+frameCopy = frame.loc[(frame['length'] != -1) | (frame['width'] != -1)] ##  a copy without missing length and width properties and lengths > 400 
 frameCopy = frameCopy.loc[(frameCopy['length'] <= 400)]
 
+## OUTLIERS: 
+plt.figure(figsize=(10,5))    
+L = sns.boxplot(x="iwrapType", y="length",
+                # hue="smoker", col="time",
+                 data=frameCopy)
+L.set_xticklabels(L.get_xticklabels(), rotation=45)
 
+
+plt.figure(figsize=(10,5))    
+W = sns.boxplot(x="iwrapType", y="width",
+                # hue="smoker", col="time",
+                 data=frameCopy)
+W.set_xticklabels(W.get_xticklabels(), rotation=45)
+
+# To do: find z scores, decide the threshold for removing outliers if any
+
+
+
+
+## MEAN, STD
 meansAIS = frameCopy.groupby(['iwrapType'])['length', 'width'].mean()
 stdAIS = frameCopy.groupby(['iwrapType'])['length', 'width'].std()
+
+
+## KDE (Kernel Density Estimation of size by vessel type)
+
+types = list(iwrapTypes.index.values)
+cols =  []
+
+for el in types:
+    cols.append(frameCopy[frameCopy.iwrapType == el])
+
+for col in cols:
+    plt.figure(figsize=(5,5))
+    ax = sns.kdeplot(col.length, col.width,
+                      cmap="Blues", shade=True, shade_lowest=False)
+    sns.despine()
+    ax.set(xlabel='Length', ylabel='Width')
+    ax.set_title(col.iwrapType.iloc[0])
+    #plt.savefig('kde_{}.svg'.format(col.iwrap_type_from_dataset.iloc[0]), format='svg', dpi=1000)
+    
 
 
 #%%
@@ -128,21 +168,3 @@ ax.spines['right'].set_visible(False)
 plt.tick_params(axis='both', which='both', bottom='off',labelbottom='off')
 plt.title('iWrap vessel types, \n South Baltic Sea 2018-2019', fontsize=12)
 
-## KDE
-
-#%%
-
-types = list(iwrapTypes.index.values)
-cols =  []
-
-for el in types:
-    cols.append(frameCopy[frameCopy.iwrapType == el])
-
-for col in cols:
-    plt.figure(figsize=(5,5))
-    ax = sns.kdeplot(col.length, col.width,
-                      cmap="Blues", shade=True, shade_lowest=False)
-    sns.despine()
-    ax.set(xlabel='Length', ylabel='Width')
-    ax.set_title(col.iwrapType.iloc[0])
-    #plt.savefig('kde_{}.svg'.format(col.iwrap_type_from_dataset.iloc[0]), format='svg', dpi=1000)
