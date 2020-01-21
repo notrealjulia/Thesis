@@ -38,6 +38,7 @@ all_files = glob.glob(path + "/*.csv")
 li = []
 
 for filename in all_files:
+    print(path + "/*.csv")
     df = pd.read_csv(filename, index_col=None,
                      error_bad_lines=False,
                      names = ['mmsi', 'length', 'width', 'minDraught', 'maxDraught', 'typeMin', 'typeMax', 'imo', 'shipName', 'aisType', 'callSign', 'a', 'b', 'c', 'd'])
@@ -47,7 +48,7 @@ frame = pd.concat(li, axis=0, ignore_index=True)
 #frame.drop_duplicates(subset=['callSign'], keep='last', inplace=True) # TO DO: Find on which identifier to drop the duplicates
 
 
-aisTypes = frame['mmsi'].value_counts(dropna=False) # number of AIS types in the dataset
+aisTypes = frame['typeMax'].value_counts(dropna=False) # number of AIS types in the dataset
 aisTypes_normalized = frame['typeMax'].value_counts(normalize=True, dropna=False) # % of AIS types in the dataset
 
 #%%
@@ -112,4 +113,8 @@ z = np.abs(stats.zscore(smt['length']))
 print(z)
 indexesO = np.where(z > 3)
 #smt.drop(smt.index[[indexesO]], inplace=True)
+
+#%%
+
+example = frame.loc[(['mmsi'] == 273310950)]
 
