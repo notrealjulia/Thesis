@@ -18,7 +18,6 @@ path = dirname(__file__)
 frame = pd.read_csv(path + "/static_ship_data.csv", sep='	', index_col=None, error_bad_lines=False)
 #frame.drop_duplicates(subset=['imo'], keep='last', inplace=True) # TO DO: Find on which identifier to drop the duplicates
 
-#%%
 
 
 #%%
@@ -39,6 +38,47 @@ frame['iwrap_type_from_dataset'][mask] = 'Undefined'
 
 frame = frame[['mmsi', 'imo_from_data_set', 'name_from_data_set', 'iwrap_type_from_dataset', 'org_type_info_from_data', 'length_from_data_set', 'width', 'size_a','size_b','size_c','size_d']]
 frame = frame.rename(columns={"imo_from_data_set":"imo", "name_from_data_set": "name", "iwrap_type_from_dataset": "iwrapType", "org_type_info_from_data": "orgType", "length_from_data_set": "length", "iwrap_type_from_dataset": "iwrapType"})
+
+
+"""
+
+fixed outliers:
+    257073000 LIVITA Fishipng ship - 'General Cargo Ship'
+    636015743 ARCHIMIDIS Other ship - 'General Cargo Ship'     
+    241289000 MARAN GAS SPARTA Other ship - 'Oil products tanker'
+    241354000 NISSOS THERASSIA Other ship - 'Oil products tanker'
+    477962200 GOLDEN ENDEAVOUR Other ship - 'General cargo ship'
+    253403000 LEIV EIRIKSSON Other ship - 'Support ship' 
+    1193046 - remove
+"""    
+
+
+frame.loc[(frame['mmsi'] == 257073000)] = frame.loc[(frame['mmsi'] == 257073000)].replace(to_replace ="Fishing ship",  
+                            value ="General cargo ship") 
+
+frame.loc[(frame['mmsi'] == 636015743)] = frame.loc[(frame['mmsi'] == 636015743)].replace(to_replace ="Other ship",  
+                            value ="General cargo ship") 
+
+frame.loc[(frame['mmsi'] == 241289000)] = frame.loc[(frame['mmsi'] == 241289000)].replace(to_replace ="Other ship",  
+                            value ="Oil products tanker") 
+
+frame.loc[(frame['mmsi'] == 241354000)] = frame.loc[(frame['mmsi'] == 241354000)].replace(to_replace ="Other ship",  
+                            value ="Oil products tanker") 
+
+frame.loc[(frame['mmsi'] == 477962200)] = frame.loc[(frame['mmsi'] == 477962200)].replace(to_replace ="Other ship",  
+                            value ="General cargo ship") 
+
+frame.loc[(frame['mmsi'] == 253403000)] = frame.loc[(frame['mmsi'] == 253403000)].replace(to_replace ="Other ship",  
+                            value ="Support ship") 
+
+
+frame = frame[frame.mmsi != 1193046]
+
+
+"""
+    iwrap and org types:
+    
+"""
 
 orgTypes = frame['orgType'].value_counts(dropna=False) # number of AIS (org) types in the dataset
 orgTypes_normalized = frame['orgType'].value_counts(normalize=True, dropna=False) # % of AIS (org) types in the dataset
@@ -84,7 +124,7 @@ iwrapUndefined  = frame.loc[(frame['iwrapType']=='Undefined')]
 
 """
 
-ANALYSIS
+ANALYSIS:
 
 
 •	Finding/Removing outliers
@@ -97,11 +137,21 @@ ANALYSIS
 types = list(iwrapTypes.index.values)
 
 
-frameCopy = frame.loc[(frame['length'] != -1) | (frame['width'] != -1)] ##  a copy without missing length and width properties and lengths > 400 
+frameCopy = frame.loc[(frame['length']  != -1) & (frame['width'] != -1)] ##  a copy without missing length and width properties and lengths > 400 
 frameCopy = frameCopy.loc[(frameCopy['length'] <= 400)]
 
 #%%
-## OUTLIERS: 
+"""
+
+OUTLIERS:
+        
+•   Visualise box plots with outliers      
+•	Find z-scores, threshold = 3.
+•	Outliers added to separate DF for checking
+•	Scatter plots
+
+
+""" 
 plt.figure(figsize=(10,5))    
 L = sns.boxplot(x="iwrapType", y="length",
                 # hue="smoker", col="time",
@@ -115,40 +165,36 @@ W = sns.boxplot(x="iwrapType", y="width",
                  data=frameCopy)
 W.set_xticklabels(W.get_xticklabels(), rotation=45)
 
-#%%
-# To do: find z scores, decide the threshold for removing outliers if any
 
-selected = frameCopy.loc[(frameCopy['iwrapType'] == 'Pleasure boat')]
+outliersDF = []
+for el in types: 
+    selected = frameCopy.loc[(frameCopy['iwrapType'] == el)]
+    selected['z'] = np.abs(stats.zscore(selected['length']))
+    outliersDF.append(selected.loc[(selected['z'] > 3)])
 
-selected['z'] = np.abs(stats.zscore(selected['length']))
-indexesO = np.where(selected['z'] > 3)
+    ax = sns.scatterplot(x="length", y="width", data=selected).set_title(el)
+    plt.show()
 
-ax = sns.scatterplot(x="length", y="witdh", data=selected)
+
+
+"""
+
+MEAN, STD 
+
+""" 
+
+meansAIS = frameCopy.groupby(['iwrapType'])['length', 'width'].mean()
+stdAIS = frameCopy.groupby(['iwrapType'])['length', 'width'].std()
+
 
 
 
 
 """
 
-To fix:
-    257073000 LIVITA Fishipng ship - 'General Cargo Ship'
-    636015743 ARCHIMIDIS Other ship - 'General Cargo Ship'     
-    241289000 MARAN GAS SPARTA Other ship - 'Oil products tanker'
-    241354000 NISSOS THERASSIA Other ship - 'Oil products tanker'
-    477962200 GOLDEN ENDEAVOUR Other ship - 'General cargo ship'
-    253403000 LEIV EIRIKSSON Other ship - 'Support ship' 
-    1193046 - remove
-"""    
+KDE (Kernel Density Estimation of size by vessel type)
 
-#%%
-## MEAN, STD
-meansAIS = frameCopy.groupby(['iwrapType'])['length', 'width'].mean()
-stdAIS = frameCopy.groupby(['iwrapType'])['length', 'width'].std()
-
-#%%
-#%%
-
-## KDE (Kernel Density Estimation of size by vessel type)
+""" 
 
 types = list(iwrapTypes.index.values)
 cols =  []
