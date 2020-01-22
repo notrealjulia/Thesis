@@ -18,6 +18,7 @@ path = dirname(__file__)
 frame = pd.read_csv(path + "/static_ship_data.csv", sep='	', index_col=None, error_bad_lines=False)
 #frame.drop_duplicates(subset=['imo'], keep='last', inplace=True) # TO DO: Find on which identifier to drop the duplicates
 
+#%%
 
 
 #%%
@@ -99,6 +100,7 @@ types = list(iwrapTypes.index.values)
 frameCopy = frame.loc[(frame['length'] != -1) | (frame['width'] != -1)] ##  a copy without missing length and width properties and lengths > 400 
 frameCopy = frameCopy.loc[(frameCopy['length'] <= 400)]
 
+#%%
 ## OUTLIERS: 
 plt.figure(figsize=(10,5))    
 L = sns.boxplot(x="iwrapType", y="length",
@@ -113,15 +115,38 @@ W = sns.boxplot(x="iwrapType", y="width",
                  data=frameCopy)
 W.set_xticklabels(W.get_xticklabels(), rotation=45)
 
+#%%
 # To do: find z scores, decide the threshold for removing outliers if any
 
+selected = frameCopy.loc[(frameCopy['iwrapType'] == 'Pleasure boat')]
+
+selected['z'] = np.abs(stats.zscore(selected['length']))
+indexesO = np.where(selected['z'] > 3)
+
+ax = sns.scatterplot(x="length", y="witdh", data=selected)
 
 
 
+
+"""
+
+To fix:
+    257073000 LIVITA Fishipng ship - 'General Cargo Ship'
+    636015743 ARCHIMIDIS Other ship - 'General Cargo Ship'     
+    241289000 MARAN GAS SPARTA Other ship - 'Oil products tanker'
+    241354000 NISSOS THERASSIA Other ship - 'Oil products tanker'
+    477962200 GOLDEN ENDEAVOUR Other ship - 'General cargo ship'
+    253403000 LEIV EIRIKSSON Other ship - 'Support ship' 
+    1193046 - remove
+"""    
+
+#%%
 ## MEAN, STD
 meansAIS = frameCopy.groupby(['iwrapType'])['length', 'width'].mean()
 stdAIS = frameCopy.groupby(['iwrapType'])['length', 'width'].std()
 
+#%%
+#%%
 
 ## KDE (Kernel Density Estimation of size by vessel type)
 
