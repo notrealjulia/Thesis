@@ -239,3 +239,32 @@ ax.spines['right'].set_visible(False)
 plt.tick_params(axis='both', which='both', bottom='off',labelbottom='off')
 plt.title('iWrap vessel types, \n South Baltic Sea 2018-2019', fontsize=12)
 
+#%%
+
+
+""" 
+    PREDICTION:
+        Predicting iWrap type using Length x Width as variables
+        
+        1) Preparation (One-hot-encoding categorical columns )
+        2) Defining X and Y    
+        3) Splitting data into train/test
+        4) Fitting the model
+        5) Results 
+"""
+
+from sklearn.model_selection import train_test_split
+from sklearn import ensemble
+
+types = list(iwrapTypes.index.values)
+
+typeOHE = pd.get_dummies(frameCopy['iwrapType'])
+iwrapDF = pd.concat([frameCopy, typeOHE], axis=1)
+
+X = iwrapDF[['length', 'width']]; y = iwrapDF[types]
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25)
+
+
+model = ensemble.BaggingClassifier()
+model.fit(X_train, y_train)
+
