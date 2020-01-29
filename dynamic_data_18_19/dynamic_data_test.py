@@ -3,6 +3,9 @@
 Created on Wed Jan 22 11:55:07 2020
 
 @author: JULSP
+
+
+exploring the data
 """
 
 import pandas as pd
