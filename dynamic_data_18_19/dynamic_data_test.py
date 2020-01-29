@@ -7,6 +7,7 @@ Created on Wed Jan 22 11:55:07 2020
 
 import pandas as pd
 from os.path import dirname
+import matplotlib.pyplot as plt
 
 path = dirname(__file__)
 data = pd.read_csv(path + "/246669000.csv", sep='	', index_col=None, error_bad_lines=False)
@@ -15,11 +16,12 @@ data = pd.read_csv(path + "/246669000.csv", sep='	', index_col=None, error_bad_l
 data['speed'] = data['sog [kn]'].apply(lambda x: x*0.51444)
 
 #plotting all data points
-ax1 = data.plot.scatter(x = 'lat [deg]', y = 'lon [deg]', c = 'speed', colormap ='ocean') # colormap ='ocean'
+ax1 = data.plot.scatter(y = 'lat [deg]', x = 'lon [deg]', c = 'speed', alpha=0.3, colormap ='rainbow') # colormap ='ocean'
 
 #making hte timestamp into the index
 data = data.set_index('timestamp')
 #%%
+
 
 #transforming index into resampable form 
 data.index = pd.to_datetime(data.index)
@@ -36,7 +38,21 @@ data_speed = data_speed.dropna()
 
 #concat and plot downsampled data
 data_minute = pd.concat([data_lat, data_lon, data_speed], axis=1)
-ax2= data_minute.plot.scatter(x = 'lat [deg]', y = 'lon [deg]', c = 'speed', colormap ='ocean') # colormap ='ocean'
+data_minute = data_minute.rename(columns={'lat [deg]': 'lat', 'lon [deg]': 'lon'})
+
+BBox = (data_minute.lon.min(), data_minute.lon.max(), data_minute.lat.min(), data_minute.lat.max())
+
+        
+x2 = data_minute.plot.scatter(x = 'lon', y = 'lat', c = 'speed', colormap = 'ocean', alpha=0.3)
+        
+x2.imshow(extent = BBox, aspect= 'equal')
+
+#%%
+
+print(data.head())
+
+
+
 
 #%%
 
