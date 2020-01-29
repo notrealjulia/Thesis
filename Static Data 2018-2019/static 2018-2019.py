@@ -246,7 +246,7 @@ plt.title('iWrap vessel types, \n South Baltic Sea 2018-2019', fontsize=12)
     PREDICTION:
         Predicting iWrap type using Length x Width as variables
         
-        1) Preparation (One-hot-encoding categorical columns )
+        1) Preparation (binary labels, SMOTE (Synthetic Minority Over-sampling Technique))
         2) Defining X and Y    
         3) Splitting data into train/test
         4) Fitting the model
@@ -258,8 +258,8 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn import metrics
 from sklearn import preprocessing
 from sklearn.metrics import classification_report, confusion_matrix
-
-
+from imblearn.over_sampling import SMOTE
+#%%
 """
     PREPARATION, SPLITTING 
     
@@ -276,10 +276,11 @@ X_ratio = np.array(X_ratio).reshape(-1, 1)
 lb = preprocessing.LabelBinarizer()
 y =pd.DataFrame(lb.fit_transform(y['iwrapType']),
                         columns=lb.classes_)
-
+smote = SMOTE('minority')
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20)
+X_sm, y_sm = smote.fit_sample(np.array(X_train), np.array(y_train))
 
-
+#%%
 """
     
     DECISION TREE CLASSIFIER
@@ -288,7 +289,8 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20)
 """
 
 classifier = DecisionTreeClassifier()
-classifier.fit(X_train, y_train)
+#classifier.fit(X_train, y_train) # without oversampling 82% 
+classifier.fit(X_sm, y_sm) # with oversampling 80%
 
 y_pred_DT= classifier.predict(X_test)
 #y_pred_DT = pd.DataFrame(y_pred_DT, columns=lb.classes_)
@@ -296,7 +298,7 @@ y_pred_DT= classifier.predict(X_test)
 print("Accuracy:",metrics.accuracy_score(y_test, y_pred_DT))
 print('DECISION TREE CLASSIFICATION REPORT: \n', classification_report(y_test, y_pred_DT,  target_names=lb.classes_))
 
-
+#%%
 
 """
 
