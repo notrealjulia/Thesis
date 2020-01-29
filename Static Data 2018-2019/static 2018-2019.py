@@ -254,17 +254,94 @@ plt.title('iWrap vessel types, \n South Baltic Sea 2018-2019', fontsize=12)
 """
 
 from sklearn.model_selection import train_test_split
-from sklearn import ensemble
-
-types = list(iwrapTypes.index.values)
-
-typeOHE = pd.get_dummies(frameCopy['iwrapType'])
-iwrapDF = pd.concat([frameCopy, typeOHE], axis=1)
-
-X = iwrapDF[['length', 'width']]; y = iwrapDF[types]
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25)
+from sklearn.tree import DecisionTreeClassifier
+from sklearn import metrics
+from sklearn import preprocessing
+from sklearn.metrics import classification_report, confusion_matrix
 
 
-model = ensemble.BaggingClassifier()
-model.fit(X_train, y_train)
+"""
+    PREPARATION, SPLITTING 
+    
+"""
 
+frameCopy = frameCopy.loc[(frameCopy['iwrapType']  != 'Undefined')] 
+y = frameCopy[['iwrapType']] # lABELS
+X = frameCopy[['length' , 'width']] #features
+X_ratio = frameCopy['length']/frameCopy['width']   #length/width as ratio
+X_ratio = np.array(X_ratio).reshape(-1, 1)
+
+
+
+lb = preprocessing.LabelBinarizer()
+y =pd.DataFrame(lb.fit_transform(y['iwrapType']),
+                        columns=lb.classes_)
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20)
+
+
+"""
+    
+    DECISION TREE CLASSIFIER
+    
+
+"""
+
+classifier = DecisionTreeClassifier()
+classifier.fit(X_train, y_train)
+
+y_pred_DT= classifier.predict(X_test)
+#y_pred_DT = pd.DataFrame(y_pred_DT, columns=lb.classes_)
+
+print("Accuracy:",metrics.accuracy_score(y_test, y_pred_DT))
+print('DECISION TREE CLASSIFICATION REPORT: \n', classification_report(y_test, y_pred_DT,  target_names=lb.classes_))
+
+
+
+"""
+
+    RANDOM FOREST CLASSIFIER
+    
+"""
+
+from sklearn.ensemble import RandomForestClassifier
+
+
+classifier=RandomForestClassifier(n_estimators=100)
+classifier.fit(X_train,y_train)
+
+y_pred_RFC=classifier.predict(X_test)
+
+print("Accuracy:",metrics.accuracy_score(y_test, y_pred_RFC))
+print('Random forest CLASSIFICATION REPORT: \n', classification_report(y_test, y_pred_RFC, target_names=lb.classes_))
+
+
+
+"""
+
+    K-Nearest Neighbors (KNN)
+    
+    
+"""
+
+from sklearn.neighbors import KNeighborsClassifier 
+
+#   THIS FUNCTION FINDS THE BEST K (NUMBER OF NEIGBORS) FOR KNN ALGORITHM
+
+from operator import itemgetter
+def best_k():
+    accuracies =  []
+    neighbors = list(range(1,10))
+    for i in neighbors:
+        knn = KNeighborsClassifier(n_neighbors = i).fit(X_train, y_train) 
+        accuracies.append((i, knn.score(X_test, y_test)))
+    return max(accuracies,key=itemgetter(1))[0]
+
+knn = KNeighborsClassifier(n_neighbors = best_k()).fit(X_train, y_train)
+y_pred_KNN= knn.predict(X_test)  
+
+print(metrics.accuracy_score(y_test, y_pred_KNN))
+print('knn CLASSIFICATION REPORT: \n', classification_report(y_test, y_pred_KNN,  target_names=lb.classes_))
+
+
+#  L/W RATIO as feature PERFORMS WORSE THAN L and W as features
