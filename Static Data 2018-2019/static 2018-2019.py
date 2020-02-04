@@ -13,6 +13,10 @@ from scipy import stats
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt  
+from sklearn.metrics import mean_squared_error 
+from sklearn.model_selection import train_test_split 
+from sklearn.linear_model import LinearRegression
+from sklearn import preprocessing
 
 path = dirname(__file__)
 frame = pd.read_csv(path + "/static_ship_data.csv", sep='	', index_col=None, error_bad_lines=False)
@@ -241,6 +245,96 @@ plt.title('iWrap vessel types, \n South Baltic Sea 2018-2019', fontsize=12)
 
 #%%
 
+""" 
+
+    PREDICTION (SIZE):
+        Predicting Length based on width and vice versa
+        
+        
+missingLengthAndWidth = frame.loc[(frame['length']  == -1) & (frame['width']  == -1)]
+missingLength = frame.loc[(frame['length']  == -1) & (frame['width']  != -1)]
+missingWidth = frame.loc[(frame['width']  == -1) & (frame['length']  != -1)]
+"""
+    # Evaluation function 
+def evaluation(model, predicted, actual):
+    errors = abs(predicted-actual)
+    averageError = np.mean(abs(predicted-actual))
+    mape = 100 * (errors / actual)
+    accuracy = 100-np.mean(mape)
+    mse = metrics.mean_squared_error(predicted, actual)
+    print(model, '\nAverage Absolute Error = ', round(averageError),'m', '\nMSE = ', round(mse, 2), '\nAccuracy = ', round(accuracy, 2), '%')
+    return({'averageAbsoluteError': averageError, 'mse':mse, 'accuracy':accuracy})
+    
+
+#%%
+
+""" 
+
+    MODEL 1. Baseline Model. Using mean size of each vessel type as predictedion.
+    
+"""
+
+def baseline(df,output): # output - what we want to predict (length or width)
+    df['predicted'] = np.round_(df[output].groupby(df.iwrapType).transform('mean')) 
+    
+    # visualiation of 10 vessels (predicted vs actual value)
+    average = np.round(pd.DataFrame({'Actual': df[output], 'Predicted': df['predicted']}))
+    average = average.head(10)
+    average.plot(kind='bar',figsize=(10,6))
+    plt.grid(which='major', linestyle='-', linewidth='0.5', color='green')
+    plt.grid(which='minor', linestyle=':', linewidth='0.5', color='black')
+    plt.title('Actual vs Predicted {0} (10 vessels), \n Baseline Model'.format(output), fontsize=12)
+    plt.show()
+    
+    # evalution metrics
+    baseEvaluation = evaluation('Baseline ({0})'.format(output), df['predicted'], df[output])
+    return (df, baseEvaluation, average)
+
+"""
+    for el in types: 
+        vessels = df.loc[(df['iwrapType']  == el)]
+        vesselEvaluation = evaluation(el, vessels['predicted'], vessels[output])
+        vesselEvaluation = pd.DataFrame(dict)
+"""        
+
+      
+baseWidth = baseline(frameCopy, 'width')
+baseLength = baseline(frameCopy, 'length')
+
+
+#%%
+
+""" 
+
+    MODEL 2. Using Linear regression for size prediction
+    
+"""
+
+def LR(output,features, labels):
+    X = features.values.reshape(-1,1) # features
+    y = labels.values#.reshape(-1,1) # labels
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+    regressor = LinearRegression()  
+    regressor.fit(X_train, y_train) #training the algorithm
+    y_pred = regressor.predict(X_test) #predicting
+
+    # visualiation of 10 vessels (predicted vs actual value)
+    lr = np.round(pd.DataFrame({'Actual': y_test.flatten(), 'Predicted': y_pred.flatten()}))
+    lr = lr.head(10)
+    lr.plot(kind='bar',figsize=(10,6))
+    plt.grid(which='major', linestyle='-', linewidth='0.5', color='green')
+    plt.grid(which='minor', linestyle=':', linewidth='0.5', color='black')
+    plt.title('Actual vs Predicted {0} (10 vessels), \n Linear Regression'.format(output), fontsize=12)
+    plt.show()
+    #evaluation metrics
+    lrEvaluation = evaluation('Linear Regression {0}'.format(output), y_pred, y_test)
+    return(lrEvaluation, lr)
+
+lrLength = LR('Length',frameCopy.width, frameCopy.length)
+lrWidth = LR('Width',frameCopy.length, frameCopy.width)
+
+
+#%%
 
 """ 
     PREDICTION:
