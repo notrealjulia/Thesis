@@ -19,16 +19,18 @@ data = pd.read_csv(path + "/246669000.csv", sep='	', index_col=None, error_bad_l
 data['speed'] = data['sog [kn]'].apply(lambda x: x*0.51444)
 
 #plotting all data points
-ax1 = data.plot.scatter(y = 'lat [deg]', x = 'lon [deg]', c = 'speed', alpha=0.3, colormap ='rainbow') # colormap ='ocean'
+ax1 = data.plot.scatter(y = 'lat [deg]', x = 'lon [deg]', c = 'speed', alpha=0.1, colormap ='rainbow') # colormap ='ocean'
+ax1.set_ylabel("Latitude in Degrees")
+ax1.set_xlabel("Longitude in Degrees")
+ax1.set_title("All AIS lon/lat data points for one vessel")
+ax1.set_clabel("Speed in knots")
+#making the timestamp into the index
 
-#making hte timestamp into the index
-data = data.set_index('timestamp')
 #%%
 
-
+data = data.set_index('timestamp')
 #transforming index into resampable form 
 data.index = pd.to_datetime(data.index)
-
 #reaampling for every 10minutes and dropping empty values, taking mean value of the new sample bin
 data_lon = data['lon [deg]'].resample('10T', how='mean')
 data_lon = data_lon.dropna()
@@ -43,12 +45,13 @@ data_speed = data_speed.dropna()
 data_minute = pd.concat([data_lat, data_lon, data_speed], axis=1)
 data_minute = data_minute.rename(columns={'lat [deg]': 'lat', 'lon [deg]': 'lon'})
 
-BBox = (data_minute.lon.min(), data_minute.lon.max(), data_minute.lat.min(), data_minute.lat.max())
+#BBox = (data_minute.lon.min(), data_minute.lon.max(), data_minute.lat.min(), data_minute.lat.max())
 
         
-x2 = data_minute.plot.scatter(x = 'lon', y = 'lat', c = 'speed', colormap = 'ocean', alpha=0.3)
-        
-x2.imshow(extent = BBox, aspect= 'equal')
+ax2 = data_minute.plot.scatter(x = 'lon', y = 'lat', c = 'speed', alpha=0.3, colormap ='rainbow')        
+ax2.set_ylabel("Latitude in Degrees")
+ax2.set_xlabel("Longitude in Degrees")
+ax2.set_title("Resampled AIS lon/lat data points for one vessel for every 10 minutes")
 
 #%%
 

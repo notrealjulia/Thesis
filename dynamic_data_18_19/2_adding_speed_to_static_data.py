@@ -62,7 +62,7 @@ sample_static3 = sample_static3.reset_index(drop =True)
 
 #%%
 """
-Remote data - dies after 3
+Remote data - dies after 3, reindex
 """
 
 for i in range(len(sample_static3)):
@@ -95,3 +95,21 @@ static_final.plot.scatter(y="top_speed", x="length_from_data_set", alpha = 0.3)
 static_final.plot.scatter(y="std_speed", x="length_from_data_set", alpha = 0.3)
 
 static_final.plot.scatter(y="length_from_data_set", x="width", alpha = 0.3)
+
+#%%
+
+cargo = static_final.loc[static_final.iloc[:,6] == "Cargo"]
+tanker = static_final.loc[static_final.iloc[:,6] == "Tanker"]
+fishing = static_final.loc[static_final.iloc[:,6] == "Fishing"]
+
+print("cargo's mean speed is ",cargo.mean_speed.mean())
+print("tanker's mean speed is ",tanker.mean_speed.mean())
+print("shipping vessel's mean speed is ",fishing.mean_speed.mean())
+
+print("cargo's mean top speed is ",cargo.top_speed.mean())
+print("tanker's mean top speed is ",tanker.top_speed.mean())
+print("shipping vessel's mean top speed is ",fishing.top_speed.mean())
+
+print("cargo's mean std in speed is ",cargo.std_speed.mean())
+print("tanker's mean std in speed is ",tanker.std_speed.mean())
+print("shipping vessel's mean std in speed is ",fishing.std_speed.mean())
