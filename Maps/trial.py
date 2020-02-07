@@ -12,13 +12,13 @@ import matplotlib.pyplot as plt
 
 
 path = dirname(__file__)
-frame = pd.read_csv(path + "/245176000.csv", sep='	', index_col=None, error_bad_lines=False)
+frame = pd.read_csv(path + "/246669000.csv", sep='	', index_col=None, error_bad_lines=False)
 
 
-minlon = max(-180, min(frame['lon [deg]'])-5)
-minlat = max(-90, min(frame['lat [deg]'])-5)
-maxlon = min(180, max(frame['lon [deg]'])+5)
-maxlat = min(90, max(frame['lat [deg]'])+5)
+minlon = max(-180, min(frame['lon [deg]'])-3)
+minlat = max(-90, min(frame['lat [deg]'])-3)
+maxlon = min(180, max(frame['lon [deg]'])+3)
+maxlat = min(90, max(frame['lat [deg]'])+3)
 
 lat0 = (maxlat + minlat)/2
 lon0 = (maxlon+minlon)/2
@@ -26,7 +26,7 @@ lat1 = (maxlat+minlat)/2-20
 
 fig,ax=plt.subplots(figsize=(15,15))
 m = Basemap(llcrnrlon=minlon,llcrnrlat=minlat,urcrnrlon=maxlon,
-            urcrnrlat=maxlat,rsphere=(6378137.00,6356752.3142),
+            urcrnrlat=maxlat,
             resolution='l',projection='cyl',lat_0=lat0,lon_0=lon0,
             lat_ts = lat1)
 
