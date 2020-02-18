@@ -128,3 +128,83 @@ dynamic_all = get_dynamic(static_data_ships)
 #atd_1 = dynamic_1_vessel.iloc[:,3].std()
 
 dynamic_all.to_csv(path + 'static_all_with_speed_rot.csv', encoding ='utf-8', index=False)
+
+#%%
+
+import seaborn as sn
+
+df = dynamic_all[(dynamic_all[['Speed_mean']] != 0).all(axis=1)]
+
+list_of_columns = [9,15,21,22,23,24,25,26]
+
+correlation_df = dynamic_all.iloc[:,list_of_columns]
+correlation_df.rename({'length_from_data_set':'vessel_length', 'width':'vessel_width'}, axis = 1, inplace = True)
+
+corrMatrix = correlation_df.corr()
+
+#%%
+sn.heatmap(corrMatrix,center = 0, annot=True)
+
+#%%
+
+import pandas as pd
+from os.path import dirname
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.stats.mstats import mode
+import seaborn as sn
+from sklearn.linear_model import LinearRegression, Lasso, BayesianRidge, HuberRegressor
+from sklearn.metrics import mean_squared_error 
+from sklearn.model_selection import train_test_split 
+from sklearn import preprocessing
+from sklearn import metrics
+
+path = dirname(__file__)
+data = correlation_df
+
+def evaluation(model, predicted, actual):
+    errors = abs(predicted-actual)
+    averageError = np.mean(abs(predicted-actual))
+    mape = 100 * (errors / actual)
+    accuracy = 100-np.mean(mape)
+    mse = metrics.mean_squared_error(predicted, actual)
+    print(np.mean(mape))
+    print(model, '\nAverage Absolute Error = ', round(averageError),'m', '\nMSE = ', round(mse, 2), '\nAccuracy = ', round(accuracy, 2), '%')
+    return({'averageAbsoluteError': averageError, 'mse':mse, 'accuracy':accuracy})
+
+#%%
+    
+"""
+Linear Regression
+"""
+
+def LR(output,features, labels):
+    X = features.values#.reshape(-1,1) # features
+    y = labels.values#.reshape(-1,1) # labels
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    regressor = LinearRegression()  
+    regressor.fit(X_train, y_train) #training the algorithm
+    y_pred = regressor.predict(X_test) #predicting
+
+    # visualiation of 10 vessels (predicted vs actual value)
+    lr = np.round(pd.DataFrame({'Actual': y_test.flatten(), 'Predicted': y_pred.flatten()}))
+    lr = lr.head(10)
+    lr.plot(kind='bar',figsize=(10,6))
+    plt.grid(which='major', linestyle='-', linewidth='0.5', color='green')
+    plt.grid(which='minor', linestyle=':', linewidth='0.5', color='black')
+    plt.title('Actual vs Predicted {0} (10 vessels), \n Linear Regression'.format(output), fontsize=12)
+    plt.show()
+    #evaluation metrics
+    lrEvaluation = evaluation('Linear Regression {0}'.format(output), y_pred, y_test)
+    return(lrEvaluation, lr)
+
+
+data = data[(data[['Speed_mean']] != 0).all(axis=1)]
+
+
+#Two most correlated features
+speed_and_rot = data[['Speed_mean']] #accuracy = 71.4 %
+lrLength = LR('Length',speed_and_rot, data['vessel_length'])
+
+#speed_and_rot_all = data[['Speed_mean', 'Speed_std', 'Speed_median', 'Speed_mode','Speed_min','Speed_max']]
+#lrLengthall = LR('Length',speed_and_rot_all, data['vessel_length']) 
