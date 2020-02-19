@@ -16,15 +16,29 @@ dynamic_data_path = "//garbo/Afd-681/05-Technical Knowledge/05-03-Navigational S
 static_data_full = pd.read_csv(path + "/static_ship_data.csv", sep='	', index_col=None, error_bad_lines=False)
 static_data = static_data_full[static_data_full.length_from_data_set != -1] #drop -1 in width
 
-print(round((len(static_data)/len(static_data_full)*100), 1), 'percent of ships have information about vessel length') #85.4
+data_raw =  pd.read_csv(path + "/static_all_with_speed_rot.csv")
 
+print(round((len(static_data)/len(static_data_full)*100), 1), 'percent of ships have information about vessel length') #85.4
+#%%
+"""
+Pre-processing dynamic data
+"""
+
+data_processed = data_raw[data_raw.length_from_data_set < 600] #vessels that are over 400m are usually helicopters
+data_processed = data_processed[data_processed.length_from_data_set > 10]
+data_processed = data_processed[data_processed.Speed_mean != 0]
+data_processed = data_processed[data_processed.iwrap_type_from_dataset != 'Pleasure boat']
+
+data_with_ROT = data_processed[data_processed.ROT_max != 0]
+
+print(len(data_with_ROT)/len(data_processed)) #16 %, 26% without pleasure boats
 #%%
 
 #print(static_data['iwrap_type_from_dataset'].unique())
 
 cargo = static_data[static_data['iwrap_type_from_dataset'] == 'General cargo ship']
 tanker = static_data[static_data['iwrap_type_from_dataset'] == 'Oil products tanker']
-fishing = static_data[static_data['iwrap_type_from_dataset'] == 'Fishing ship']
+fishing = static_data[static_data['iwrap_type_from_datadata_processed = data[data.length_from_data_set > 10]set'] == 'Fishing ship']
 passenger = static_data[static_data['iwrap_type_from_dataset'] == 'Passenger ship']
 boat = static_data[static_data['iwrap_type_from_dataset'] == 'Pleasure boat']
 support = static_data[static_data['iwrap_type_from_dataset'] == 'Support ship']
@@ -160,7 +174,7 @@ from sklearn import preprocessing
 from sklearn import metrics
 
 path = dirname(__file__)
-data = correlation_df
+data = data_processed
 
 def evaluation(model, predicted, actual):
     errors = abs(predicted-actual)
@@ -181,7 +195,7 @@ Linear Regression
 def LR(output,features, labels):
     X = features.values#.reshape(-1,1) # features
     y = labels.values#.reshape(-1,1) # labels
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
     regressor = LinearRegression()  
     regressor.fit(X_train, y_train) #training the algorithm
     y_pred = regressor.predict(X_test) #predicting
@@ -204,7 +218,7 @@ data = data[(data[['Speed_mean']] != 0).all(axis=1)]
 
 #Two most correlated features
 speed_and_rot = data[['Speed_mean']] #accuracy = 71.4 %
-lrLength = LR('Length',speed_and_rot, data['vessel_length'])
+lrLength = LR('Length',speed_and_rot, data['length_from_data_set'])
 
-#speed_and_rot_all = data[['Speed_mean', 'Speed_std', 'Speed_median', 'Speed_mode','Speed_min','Speed_max']]
-#lrLengthall = LR('Length',speed_and_rot_all, data['vessel_length']) 
+speed_and_rot_all = data[['Speed_mean', 'Speed_median', 'Speed_mode','Speed_min','Speed_max']]
+lrLengthall = LR('Length',speed_and_rot_all, data['length_from_data_set']) 
