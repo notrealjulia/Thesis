@@ -27,11 +27,30 @@ Pre-processing dynamic data
 data_processed = data_raw[data_raw.length_from_data_set < 600] #vessels that are over 400m are usually helicopters
 data_processed = data_processed[data_processed.length_from_data_set > 10]
 data_processed = data_processed[data_processed.Speed_mean != 0]
+data_processed = data_processed[data_processed.Speed_mean <30]
 data_processed = data_processed[data_processed.iwrap_type_from_dataset != 'Pleasure boat']
 
 data_with_ROT = data_processed[data_processed.ROT_max != 0]
 
 print(len(data_with_ROT)/len(data_processed)) #16 %, 26% without pleasure boats
+
+#%%
+
+"""
+plotting speed against ship length
+"""
+
+import matplotlib.pyplot as plt
+
+plt.scatter( data_processed.length_from_data_set, data_processed.Speed_std, c="b", label="training samples", alpha = 0.2)
+plt.xlabel('Vessel length')
+plt.ylabel('Vessel mean speed')
+
+#%%
+plt.scatter( data_with_ROT.length_from_data_set, data_with_ROT.ROT_max, c="b", label="training samples", alpha = 0.2)
+plt.xlabel('Vessel length')
+plt.ylabel('Vessel ROT')
+
 #%%
 
 #print(static_data['iwrap_type_from_dataset'].unique())
@@ -217,8 +236,52 @@ data = data[(data[['Speed_mean']] != 0).all(axis=1)]
 
 
 #Two most correlated features
-speed_and_rot = data[['Speed_mean']] #accuracy = 71.4 %
+speed_and_rot = data[['Speed_mean']] #accuracy = 39.14 %
 lrLength = LR('Length',speed_and_rot, data['length_from_data_set'])
 
 speed_and_rot_all = data[['Speed_mean', 'Speed_median', 'Speed_mode','Speed_min','Speed_max']]
-lrLengthall = LR('Length',speed_and_rot_all, data['length_from_data_set']) 
+lrLengthall = LR('Length',speed_and_rot_all, data['length_from_data_set']) #Accuracy =  41.83 % 
+
+#%%
+
+#Two most correlated features
+speed_and_rot = data_with_ROT[['Speed_mean', 'ROT_min']] #Accuracy =  72.96 %
+lrLength = LR('Length',speed_and_rot, data_with_ROT['length_from_data_set'])
+
+speed_and_rot_all = data_with_ROT[['Speed_mean', 'Speed_median', 'Speed_mode','Speed_min','Speed_max','ROT_min', 'ROT_max']]
+lrLengthall = LR('Length',speed_and_rot_all, data_with_ROT['length_from_data_set'])  #Accuracy =  74.8 %
+
+#%%
+
+"""
+DecisionTreeRegressor - THE BEST
+"""
+
+from sklearn.tree import DecisionTreeRegressor
+
+def TreesReg(output,features, labels):
+    X = features.values#.reshape(-1,1) # features
+    y = labels.values#.reshape(-1,1) # labels
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+    regressor = DecisionTreeRegressor()  
+    regressor.fit(X_train, y_train) #training the algorithm
+    y_pred = regressor.predict(X_test) #predicting
+
+    # visualiation of 10 vessels (predicted vs actual value)
+    lr = np.round(pd.DataFrame({'Actual': y_test.flatten(), 'Predicted': y_pred.flatten()}))
+    lr = lr.head(10)
+    lr.plot(kind='bar',figsize=(10,6))
+    plt.grid(which='major', linestyle='-', linewidth='0.5', color='green')
+    plt.grid(which='minor', linestyle=':', linewidth='0.5', color='black')
+    plt.title('Actual vs Predicted {0} (10 vessels), \n Decision Tree Regressor'.format(output), fontsize=12)
+    plt.show()
+    #evaluation metrics
+    lrEvaluation = evaluation('Decision Tree Regressor {0}'.format(output), y_pred, y_test)
+    return(lrEvaluation, lr)
+
+#Two most correlated features
+speed_and_rot = data_with_ROT[['Speed_mean', 'ROT_min']] #Accuracy =  72.96 %
+TreesRegLength = TreesReg('Length',speed_and_rot, data_with_ROT['length_from_data_set'])
+
+speed_and_rot_all = data_with_ROT[['Speed_mean', 'Speed_median', 'Speed_mode','Speed_min','Speed_max','ROT_min', 'ROT_max']]
+TreesRegLengthall = TreesReg('Length',speed_and_rot_all, data_with_ROT['length_from_data_set'])  #Accuracy =  74.8 %

@@ -58,10 +58,15 @@ def LR(output,features, labels):
     return(lrEvaluation, lr)
 
 #Two most correlated features
+    
 speed_and_rot = data[['mean_speed', 'ROT_min']] #accuracy = 71.4 %
+speed_and_rot=((speed_and_rot - speed_and_rot.min()) / (speed_and_rot.max() - speed_and_rot.min())) * 20
+speed_and_rot.plot.hist()
+
 lrLength = LR('Length',speed_and_rot, data['length_from_data_set'])
 
 speed_and_rot_all = data[['mean_speed', 'top_speed', 'std_speed', 'Speed_mode', 'Speed_median', 'ROT_mean', 'ROT_max', 'ROT_median', 'ROT_min']]
+speed_and_rot_all=((speed_and_rot_all - speed_and_rot_all.min()) / (speed_and_rot_all.max() - speed_and_rot_all.min())) * 20
 lrLengthall = LR('Length',speed_and_rot_all, data['length_from_data_set']) #accuracy = 72.75 %
 
 #%%
@@ -90,10 +95,10 @@ def LassoRegression(output,features, labels):
 
 
 #Two most correlated features
-speed_and_rot = data[['mean_speed', 'ROT_min']] #accuracy = 71.38 %
+#speed_and_rot = data[['mean_speed', 'ROT_min']] #accuracy = 71.38 %
 Lasso_Length = LassoRegression('Length',speed_and_rot, data['length_from_data_set'])
 
-speed_and_rot_all = data[['mean_speed', 'top_speed', 'std_speed', 'Speed_mode', 'Speed_median', 'ROT_mean', 'ROT_max', 'ROT_median', 'ROT_min']]
+#speed_and_rot_all = data[['mean_speed', 'top_speed', 'std_speed', 'Speed_mode', 'Speed_median', 'ROT_mean', 'ROT_max', 'ROT_median', 'ROT_min']]
 Lasso_Length_all = LassoRegression('Length',speed_and_rot_all, data['length_from_data_set']) #accuracy = 72.77 %
 
 #%%
@@ -121,10 +126,10 @@ def BayesianRidgeRegression(output,features, labels):
     return(lrEvaluation, lr)
 
 #Two most correlated features
-speed_and_rot = data[['mean_speed', 'ROT_min']] #accuracy = 71.39 %
+#speed_and_rot = data[['mean_speed', 'ROT_min']] #accuracy = 71.39 %
 Lasso_Length = BayesianRidgeRegression('Length',speed_and_rot, data['length_from_data_set'])
 
-speed_and_rot_all = data[['mean_speed', 'top_speed', 'std_speed', 'Speed_mode', 'Speed_median', 'ROT_mean', 'ROT_max', 'ROT_median', 'ROT_min']]
+#speed_and_rot_all = data[['mean_speed', 'top_speed', 'std_speed', 'Speed_mode', 'Speed_median', 'ROT_mean', 'ROT_max', 'ROT_median', 'ROT_min']]
 Lasso_Length_all = BayesianRidgeRegression('Length',speed_and_rot_all, data['length_from_data_set']) #accuracy = 72.77 %
 
 #%%
@@ -153,10 +158,10 @@ def HuberReg(output,features, labels):
     return(lrEvaluation, lr)
 
 #Two most correlated features
-speed_and_rot = data[['mean_speed', 'ROT_min']] #accuracy = 72.79 %
+#speed_and_rot = data[['mean_speed', 'ROT_min']] #accuracy = 72.79 %
 Lasso_Length = HuberReg('Length',speed_and_rot, data['length_from_data_set'])
 
-speed_and_rot_all = data[['mean_speed', 'top_speed', 'std_speed', 'Speed_mode', 'Speed_median', 'ROT_mean', 'ROT_max', 'ROT_median', 'ROT_min']]
+#speed_and_rot_all = data[['mean_speed', 'top_speed', 'std_speed', 'Speed_mode', 'Speed_median', 'ROT_mean', 'ROT_max', 'ROT_median', 'ROT_min']]
 Lasso_Length_all = HuberReg('Length',speed_and_rot_all, data['length_from_data_set']) #accuracy = 73.83 %
 
 #%%
@@ -188,8 +193,8 @@ def TreesReg(output,features, labels):
     return(lrEvaluation, lr)
 
 #Two most correlated features
-speed_and_rot = data[['mean_speed', 'ROT_min']] #accuracy = 75.1 %
+#speed_and_rot = data[['mean_speed', 'ROT_min']] #accuracy = 75.1 %
 Lasso_Length = TreesReg('Length',speed_and_rot, data['length_from_data_set'])
 
-speed_and_rot_all = data[['mean_speed', 'top_speed', 'std_speed', 'Speed_mode', 'Speed_median', 'ROT_mean', 'ROT_max', 'ROT_median', 'ROT_min']]
+#speed_and_rot_all = data[['mean_speed', 'top_speed', 'std_speed', 'Speed_mode', 'Speed_median', 'ROT_mean', 'ROT_max', 'ROT_median', 'ROT_min']]
 Lasso_Length_all = TreesReg('Length',speed_and_rot_all, data['length_from_data_set']) #accuracy = 79.97 %
