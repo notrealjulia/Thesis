@@ -11,6 +11,7 @@ exploring the data
 import pandas as pd
 from os.path import dirname
 import matplotlib.pyplot as plt
+import seaborn as sn
 
 path = dirname(__file__)
 dynamic_data_path = "//garbo/Afd-681/05-Technical Knowledge/05-03-Navigational Safety/00 Udviklingsprojekter/01 ML - Missing properties/02 Work/01 IWRAP/ML South Baltic Sea vA/export"
@@ -106,18 +107,25 @@ Testing Linear Regression Assumptions
 data_2 = pd.read_csv(path + "/static_all_with_speed_rot.csv")
 
 data_2 = data_2[data_2['length_from_data_set'] < 401]
-data_2 = data_2[data_2['Speed_mean'] < 70]
+data_2 = data_2[data_2['Speed_mean'] < 50]
 
-#linear relationship
-Y = data_2.length_from_data_set
-X = data_2.Speed_mean
+#data_2["iwrap_type_from_dataset"] = data_2["iwrap_type_from_dataset"].astype('category')
+#data_2["iwrap_n"] = data_2["iwrap_type_from_dataset"].cat.codes
 
 """ Linear Relationship"""
-# ax1 = data_2.plot.scatter( x = 'length_from_data_set', y = 'Speed_mean', alpha = 0.3)
+# ax1 = data_2.plot.scatter( x = 'length_from_data_set', y = 'Speed_mean', c='iwrap_n', colormap='viridis',  alpha = 0.3)
 # ax1.set_title('Relationship between speed and size of vessels in m')
 # ax1.set_ylabel('Mean speed of vessel in knots')
 # ax1.set_xlabel('Length of vessel')
 
+data_2 = data_2.rename({'iwrap_type_from_dataset': 'Vessel Type'}, axis=1)
+
+ax = sn.scatterplot(x="length_from_data_set", y="Speed_mean", hue="Vessel Type", style = "Vessel Type",  data=data_2)
+ax.set_xlabel('Length of vessel in m')
+ax.set_ylabel('Mean speed of vessel in kn')
+ax.set_title('Relationship between speed and size of vessels')
+ax.show()
+#%%
 """ Normal distribution"""
 #normalized data plos exactly the same
 data_2_subset = data_2[['length_from_data_set', 'Speed_mean']]

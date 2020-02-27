@@ -24,7 +24,7 @@ data_resample = data.resample('T').mean()
 data_resample = data_resample.dropna()
 data_resample['Cog_diff'] = data_resample['cog [deg]'].diff()
 data_resample['Cog_diff_abs'] = data_resample['Cog_diff'].abs()
-#DList = [group[1] for group in data_resample.groupby(data_resample.index.day)
+DList = [group[1] for group in data_resample.groupby(data_resample.index.day)
 #data_cog_dif = data_resample['cog [deg]'].diff()
 #max_rot = data_resample['cog [deg]'].max()
 
