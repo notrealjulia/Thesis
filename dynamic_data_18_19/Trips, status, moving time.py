@@ -70,7 +70,7 @@ static['movingTime']= np.nan
 memoryErrors = []
 parserErrors = []
 otherErrors = []
-for mmsi in progressbar.progressbar(dictionary.get('Passenger ship')[:1]): 
+for mmsi in progressbar.progressbar(enumerate(static['mmsi'])): 
     
     try:
         dynamic = pd.read_csv(dynamic_path +"/{}.csv".format(str(mmsi)), sep='	', index_col=None, error_bad_lines=False)    
