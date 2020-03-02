@@ -5,6 +5,7 @@ Created on Thu Feb 27 11:49:43 2020
 @author: KORAL
 """
 
+
 """
 
 Goes trough MMSI numbers (all or separated by type) from static file and opens corresponding dynamic file.
@@ -14,6 +15,7 @@ Stops that pass the threshold (e.g. 15 min or an hour) are counted as trips and 
 
 """
 
+#%%
 # ALL vessels 
 
 from datetime import datetime
@@ -21,16 +23,21 @@ import pandas as pd
 from os.path import dirname
 import matplotlib.pyplot as plt
 import numpy as np
+import sys
+import progressbar
 
+print(sys.path)
 path = dirname(__file__)
 dynamic_path= "//garbo/Afd-681/05-Technical Knowledge/05-03-Navigational Safety/00 Udviklingsprojekter/01 ML - Missing properties/02 Work/01 IWRAP/ML South Baltic Sea vA/export"
 static = pd.read_csv(r"C:\Users\KORAL\OneDrive - Ramboll\Documents\GitHub\Thesis\Thesis\Static Data 2018-2019/static_ship_data.csv", sep='	', index_col=None, error_bad_lines=False)
-
+dynamic = pd.read_csv(dynamic_path + "/211727510.csv", sep='	', index_col=None, error_bad_lines=True)
 dictionary = static.groupby('iwrap_type_from_dataset')['mmsi'].apply(lambda g: g.values.tolist()).to_dict()
 
+#%%
 static['trips'] = np.nan
 memoryErrors = []
-for mmsi in dictionary.get('Passenger ship'): 
+parserErrors = []
+for mmsi in progressbar.progressbar(dictionary.get('Passenger ship')): 
     
     try:
         dynamic = pd.read_csv(dynamic_path +"/{}.csv".format(str(mmsi)), sep='	', index_col=None, error_bad_lines=False)    
@@ -53,23 +60,26 @@ for mmsi in dictionary.get('Passenger ship'):
             except:
                 pass
         
-        for time in idleTimes:
-            if time.total_seconds() > 900:
+        for idle in idleTimes:
+            if idle.total_seconds() > 900:  # stop time defined in seconds, currently = 15 minutes 
                 
                 trips += 1
 
         static['trips'][(static['mmsi'] == mmsi)] = trips  
     except MemoryError as error:
-        memoryErrors.append(error)    
+        memoryErrors.append((mmsi,error))
+    except pd.errors.ParserError as er:
+        parserErrors.append((mmsi,er))
 #%%
 
 ### TESTING 
-print(static.loc[static['mmsi'] == 235101881])
-dynamic = pd.read_csv(dynamic_path + "/235101881.csv", sep='	', index_col=None, error_bad_lines=False)
-plt.plot(dynamic['lat [deg]'], dynamic['lon [deg]'])
+#print(static.loc[static['mmsi'] == 265874000])
+#%%
+#dynamic = pd.read_csv(dynamic_path + "/265874000.csv", sep='	', index_col=None, error_bad_lines=True)
+#plt.plot(dynamic['lat [deg]'], dynamic['lon [deg]'])
 
 #%%
-
+"""
 # 1 VESSEL 
 idleTimes = []
 stops = []
@@ -98,3 +108,4 @@ for time in idleTimes:
         trips += 1
 
 static['trips'][(static['mmsi'] == mmsi)] = trips      
+"""
