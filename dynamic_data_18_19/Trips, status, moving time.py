@@ -35,7 +35,7 @@ Goes trough MMSI numbers from static file:
     - the number of stops from idleTimes list that exceed certain limit (.e.g. 15 minutes´) and added as 'trips' in the static file. 
     
 
-            
+Other errors seem to occur  because ship has turned off AIS receiver before stopping. For these ships another function should be applied (either coordinate or timestamp based)           
 
 """
 
@@ -66,11 +66,16 @@ static['trips'] = np.nan
 static['status'] = np.nan
 static['idleTime']= np.nan
 static['movingTime']= np.nan
+static['signals'] = np.nan
 
 memoryErrors = []
 parserErrors = []
 otherErrors = []
-for mmsi in progressbar.progressbar(enumerate(static['mmsi'])): 
+
+cut_labels = ['still', 'moving']
+cut_bins = [-0.1, 0.1, 60]
+
+for mmsi in progressbar.progressbar(static['mmsi']): 
     
     try:
         dynamic = pd.read_csv(dynamic_path +"/{}.csv".format(str(mmsi)), sep='	', index_col=None, error_bad_lines=False)    
@@ -79,8 +84,18 @@ for mmsi in progressbar.progressbar(enumerate(static['mmsi'])):
         moves = []
         movingTimes = []
         trips = 0
+        static['signals'][(static['mmsi'] == mmsi)] = len(dynamic)
         
-                   
+        # separating active/inactive vessels by proportion of moving signals
+        dynamic['bins'] = pd.cut(dynamic['sog [kn]'], bins=cut_bins, labels=cut_labels)
+        bins_count = dynamic.bins.value_counts(normalize=True)
+
+        if bins_count.still >= .8:
+            static['status'][(static['mmsi'] == mmsi)] = 'not active'
+        elif bins_count.moving > 0.2:
+            static['status'][(static['mmsi'] == mmsi)] = 'active'
+
+        # looking for number of trips and more accurate status by including timestamps    
         for i, speed in enumerate(dynamic['sog [kn]']):
             try:
                 if speed < 0.1:
@@ -108,7 +123,7 @@ for mmsi in progressbar.progressbar(enumerate(static['mmsi'])):
         static['idleTime'][(static['mmsi'] == mmsi)] = idle
         static['movingTime'][(static['mmsi'] == mmsi)] = moving
         if status >= 80:
-            static['status'][(static['mmsi'] == mmsi)] = 'harboured'
+            static['status'][(static['mmsi'] == mmsi)] = 'not active'
         else:
             static['status'][(static['mmsi'] == mmsi)] = 'active'
             
@@ -127,17 +142,28 @@ for mmsi in progressbar.progressbar(enumerate(static['mmsi'])):
         otherErrors.append(mmsi)
         print('Other error at', mmsi)
         
-static.to_csv('static, trips and status', sep='\t')
+static.to_csv('Trips_and_VesselStatus_Static', sep='\t')
 
 #%%
 
 ### TESTING 
-print(static.loc[static['mmsi'] == mmsi][['trips', 'status', 'idleTime', 'movingTime']])
-dynamic = pd.read_csv(dynamic_path + "/{}.csv".format(mmsi), sep='	', index_col=None, error_bad_lines=True)
+print(static.loc[static['mmsi'] == 211201810][['trips', 'status', 'idleTime', 'movingTime']])
+dynamic = pd.read_csv(dynamic_path + "/211201810.csv".format(mmsi), sep='	', index_col=None, error_bad_lines=True)
 plt.plot(dynamic['lat [deg]'], dynamic['lon [deg]'])
 
+#%%
+"""
+x = dynamic['sog [kn]'].value_counts()
 
 
 #%%
-static.to_csv('static with status and trips', sep='\t')
+otherErrors.to_csv('errors', sep='\t')
 
+#%%
+
+static['signals'].isna().sum()
+#%%
+# static.to_csv('static with status and trips', sep='\t')
+
+
+"""
