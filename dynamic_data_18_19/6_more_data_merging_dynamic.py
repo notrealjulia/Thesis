@@ -30,9 +30,13 @@ data_processed = data_processed[data_processed.Speed_mean != 0]
 data_processed = data_processed[data_processed.Speed_mean <30]
 data_processed = data_processed[data_processed.iwrap_type_from_dataset != 'Pleasure boat']
 
+
 data_with_ROT = data_processed[data_processed.ROT_max != 0]
 
 print(len(data_with_ROT)/len(data_processed)) #16 %, 26% without pleasure boats
+
+#%%
+data_processed.to_csv(path + 'more_ships.csv', encoding ='utf-8', index=False)
 
 #%%
 
