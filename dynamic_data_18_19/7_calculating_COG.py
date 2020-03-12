@@ -16,15 +16,42 @@ data_dynamic_test = pd.read_csv(path + "/246669000.csv", sep='	', index_col=None
 
 #%%
 
-data = data_dynamic_test.set_index('timestamp')
+data_2 = data_dynamic_test.set_index('timestamp')
 #transforming index into resampable form 
-data.index = pd.to_datetime(data.index)
-#resampling for every 10minutes and dropping empty values, taking mean value of the new sample bin
+data_2.index = pd.to_datetime(data_2.index)
+
+#%%
+first_date = sorted(data_2.index)[0].isoformat()[:10] #YES
+
+first_day_data = data_2.loc[first_date]
+
+
+#%%
+
+data_resample = first_day_data.resample('T').mean()
+data_resample = data_resample.dropna()
+data_resample['Cog_diff'] = data_resample['cog [deg]'].diff()
+data_resample['Cog_diff_abs'] = data_resample['Cog_diff'].abs()
+
+#series to locate time holes
+time_difference = data_resample.index.to_series().diff()
+#add differences in timestamps to the original df
+data_resample_with_time_difference = pd.concat([data_resample, time_difference], axis=1, sort=False)
+#drop all lines that do not deal with 1 minute intervals
+data_resample_with_time_difference_1min = data_resample_with_time_difference[data_resample_with_time_difference.timestamp == '00:01:00']
+
+
+#%%
+#resampling for every minute and dropping empty values, taking mean value of the new sample bin
 data_resample = data.resample('T').mean()
 data_resample = data_resample.dropna()
 data_resample['Cog_diff'] = data_resample['cog [deg]'].diff()
 data_resample['Cog_diff_abs'] = data_resample['Cog_diff'].abs()
 DList = [group[1] for group in data_resample.groupby(data_resample.index.day)
+         
+
+#np.gradient()
+         
 #data_cog_dif = data_resample['cog [deg]'].diff()
 #max_rot = data_resample['cog [deg]'].max()
 
