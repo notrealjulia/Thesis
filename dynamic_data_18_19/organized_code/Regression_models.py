@@ -81,7 +81,7 @@ Normalizing and Scaling
 scaler = RobustScaler() #accounts for outliers
 
 scaler.fit(X_trainval)
-X_trainval_scaled = scaler.transform(X_trainval) #Double check if this s correct scaling or if it should be scaled on training data only
+X_trainval_scaled = scaler.transform(X_trainval) #TODO Double check if this is correct scaling or if it should be scaled on training data only
 X_valid_scaled = scaler.transform(X_valid)
 X_train_scaled = scaler.transform(X_train)
 X_test_scaled = scaler.transform(X_test)
@@ -159,7 +159,7 @@ grid_search = GridSearchCV(forest_regr, param_grid, cv=5, n_jobs =-1)
 grid_search.fit(X_valid_scaled, y_valid)
 print("Best parameters: {}".format(grid_search.best_params_))
 best_parameters = grid_search.best_params_
-print("Best cross-validation score: {:.2f}".format(grid_search.best_score_))
+print("Mean cross-validated score of the best_estimator: {:.2f}".format(grid_search.best_score_))
 
 ### RESULTS:
 ###Best parameters: {'ccp_alpha': 3, 'max_depth': 15, 'max_features': 3, 'n_estimators': 70}
@@ -170,7 +170,7 @@ print("Best cross-validation score: {:.2f}".format(grid_search.best_score_))
 2.
 Random Forest model
 Random Grid Search continued - visualising results
-#only works with 2 hyper parameters 
+#only works with 2 hyper parameters therefore commented out
 """
 
 # #convert to DF
@@ -237,7 +237,7 @@ grid_search2 = GridSearchCV(regr2, param_grid2, cv=5, n_jobs =-1)
 grid_search2.fit(X_valid_scaled, y_valid) #on validation set
 print("Best parameters: {}".format(grid_search2.best_params_))
 best_parameters2 = grid_search.best_params_
-print("Best cross-validation score: {:.2f}".format(grid_search.best_score_))
+print("Mean cross-validated score of the best_estimator: {:.2f}".format(grid_search.best_score_))
 
 
 #ignores certain features, should outpreform Random Forest
@@ -269,10 +269,10 @@ nn = MLPRegressor(max_iter = 10000, random_state=0)
 param_grid = {'hidden_layer_sizes': [100, 150, 200],
               'alpha': [0.0001, 0.001, 0.01],}
 
-grid_search = GridSearchCV(nn, param_grid, cv=5, n_jobs =-1) #incormporates Cross validation, , n_jobs =-1 uses all cores
+grid_search = GridSearchCV(nn, param_grid, cv=5, n_jobs =-1) #incorporates Cross validation, , n_jobs =-1 uses all PC cores
 grid_search.fit(X_valid_scaled, y_valid)
 print("Best parameters: {}".format(grid_search.best_params_))
-print("Best cross-validation score: {:.2f}".format(grid_search.best_score_))
+print("Mean cross-validated score of the best_estimator: {:.2f}".format(grid_search.best_score_))
 best_parameters3 = grid_search.best_params_
 
 #%%
@@ -319,6 +319,7 @@ print("Absolute mean error for GB is {:.3f}m\n".format(MAE_NN))
 """
 4. 
 How well does the model predict for individual ship types?
+Not sure if this part is right 
 """
 
 tanker = data_processed[data_processed['iwrap_type_from_dataset'] == 'Oil products tanker']
@@ -360,6 +361,7 @@ boat_X_scaled = scaler.transform(boat_X)
 
 #%%
 """
+4.
 Random Forest evaluation for different ship types
 """
 
