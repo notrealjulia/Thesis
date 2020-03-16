@@ -66,9 +66,10 @@ test_data['ROT_std'] = np.nan
 
 list_of_first_dates = []
 
+
 #%%
 
-def get_dynamic_first_day(static_data_ships_local):
+def get_dynamic_first_day(static_data_ships_local, day_number):
     
     for i in range(len(static_data_ships_local)):
         print(i)
@@ -87,9 +88,11 @@ def get_dynamic_first_day(static_data_ships_local):
             dynamic = dynamic.set_index('timestamp')
             #transforming index into resampable form 
             dynamic.index = pd.to_datetime(dynamic.index)
-            first_date = sorted(dynamic.index)[0].isoformat()[:10] #since it is a string pick first XXXX-XX-XX ten digits, to not look at time
+            
+            first_date = sorted(dynamic.index)[day_number].isoformat()[:10] #since it is a string pick first XXXX-XX-XX ten digits, to not look at time
             # print(first_date)
             list_of_first_dates.append(first_date)
+            
             first_day = dynamic.loc[first_date] #only look at the data recorded in the first day of sailing
             first_day = first_day[first_day['sog [kn]'] != 0] #dropping zero, this fucks up our values
         except:
@@ -136,6 +139,31 @@ def get_dynamic_first_day(static_data_ships_local):
     return static_data_ships_local
 
 #%%
+"""
+Getting more data for the rarer boats
+"""    
+rare_boats = [ 'Passenger ship','Fishing ship', 'Support ship' ,'Fast ferry']
+data_set_few =test_data[test_data['iwrap_type_from_dataset'].isin(rare_boats)]  
+data_set_few = data_set_few.reset_index(drop =True) #reset index
+#%%    
+day_1_few_vessels = get_dynamic_first_day(data_set_few, day_number = 1)  
+day_1_few_vessels.to_csv("rare_ships_day_1.csv", index = False)
+
+#%%
+
+day_2_few_vessels = get_dynamic_first_day(data_set_few, day_number = 2)  
+day_2_few_vessels.to_csv("rare_ships_day_2.csv", index = False)
+
+day_3_few_vessels = get_dynamic_first_day(data_set_few, day_number = 3)  
+day_3_few_vessels.to_csv("rare_ships_day_3.csv", index = False)
+
+day_4_few_vessels = get_dynamic_first_day(data_set_few, day_number = 4)  
+day_4_few_vessels.to_csv("rare_ships_day_4.csv", index = False)
+
+
+
+#%%
+
 
 test_speed_only = get_dynamic_first_day(test_data)
 test_speed_only.to_csv("DYNAMIC_DAYS_test.csv", index = False) #saves to C:\Users\julsp - probably something with spyder
