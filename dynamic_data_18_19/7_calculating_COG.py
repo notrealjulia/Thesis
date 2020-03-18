@@ -23,7 +23,10 @@ data_2.index = pd.to_datetime(data_2.index)
 #%%
 first_date = sorted(data_2.index)[0].isoformat()[:10] #YES
 
+last_date = 
 first_day_data = data_2.loc[first_date]
+
+first_day_data_2 = data_2.loc['2018-12-22']
 
 
 #%%

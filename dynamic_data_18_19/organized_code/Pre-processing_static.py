@@ -3,6 +3,9 @@
 Created on Mon Mar  9 11:10:55 2020
 
 @author: JULSP
+
+Script for getting dynamic data for active vessels 
+
 """
 import pandas as pd
 from os.path import dirname
@@ -14,12 +17,15 @@ import numpy as np
 Loading data
 """
 path = dirname(__file__)
+dynamic_data_path = "//garbo/Afd-681/05-Technical Knowledge/05-03-Navigational Safety/00 Udviklingsprojekter/01 ML - Missing properties/02 Work/01 IWRAP/ML South Baltic Sea vA/export"
+
 data = pd.read_csv(path + "/Trips_and_VesselStatus_Static.csv",  sep='	', index_col=None, error_bad_lines=False) 
 
 #%%
 """
 Selecting mmsi subset
 active ships with over a 1000 signals
+of a certain size 
 """
 active_subset = data[(data['status']== 'active') & (data['signals']>= 1000)]
 #getting rid of unecessary rows
@@ -30,26 +36,21 @@ data_static_cleaned = data_static_cleaned[data_static_cleaned['length_from_data_
 #data_static_cleaned = data_static_cleaned[data_static_cleaned['iwrap_type_from_dataset'] != "Other ship"]
 
 data_static_cleaned = data_static_cleaned.reset_index(drop =True) #reset index
-
-
 #%%
 
 # """
 # Visualising ship type distribution 
 # """
-
 # trips_for_types = data_static_cleaned.groupby('iwrap_type_from_dataset')['trips'].sum()
 # ax1 = trips_for_types.plot.pie(y = 'trips', label = 'iwrap_type_from_dataset', autopct='%1.0f%%', pctdistance=0.8, labeldistance=1.2)
 # #%%
-
 # trips_for_types = data_static_cleaned.groupby('iwrap_type_from_dataset')['trips'].sum().reset_index() 
 # sns.barplot(x = 'iwrap_type_from_dataset', y ='trips', data = trips_for_types)
 
 #%%
-"""Getting dynamic data for 1 day"""
-dynamic_data_path = "//garbo/Afd-681/05-Technical Knowledge/05-03-Navigational Safety/00 Udviklingsprojekter/01 ML - Missing properties/02 Work/01 IWRAP/ML South Baltic Sea vA/export"
-
-
+"""
+Adding columns to store dynamic variables in the static dataframe
+"""
 test_data = data_static_cleaned
 
 test_data['Speed_mean'] = np.nan
@@ -57,19 +58,15 @@ test_data['Speed_median'] = np.nan
 test_data['Speed_min'] = np.nan
 test_data['Speed_max'] = np.nan
 test_data['Speed_std'] = np.nan
-
 test_data['ROT_mean'] = np.nan
 test_data['ROT_median'] = np.nan
 test_data['ROT_min'] = np.nan
 test_data['ROT_max'] = np.nan
 test_data['ROT_std'] = np.nan
-
-list_of_first_dates = []
-
-
 #%%
+list_of_first_dates = [] #to print which date we are at, currently commented out
 
-def get_dynamic_first_day(static_data_ships_local, day_number):
+def get_dynamic_first_day(static_data_ships_local, date):
     
     for i in range(len(static_data_ships_local)):
         print(i)
@@ -89,7 +86,9 @@ def get_dynamic_first_day(static_data_ships_local, day_number):
             #transforming index into resampable form 
             dynamic.index = pd.to_datetime(dynamic.index)
             
-            first_date = sorted(dynamic.index)[day_number].isoformat()[:10] #since it is a string pick first XXXX-XX-XX ten digits, to not look at time
+            ### comment the line 93 and uncomment 94 to get data from first day
+            first_date = date
+            #first_date = sorted(dynamic.index)[0].isoformat()[:10] #since it is a string pick first XXXX-XX-XX ten digits, to not look at time
             # print(first_date)
             list_of_first_dates.append(first_date)
             
@@ -138,35 +137,44 @@ def get_dynamic_first_day(static_data_ships_local, day_number):
             
     return static_data_ships_local
 
+
 #%%
+    
 """
-Getting more data for the rarer boats
+Getting more data for the rare boats
 """    
 rare_boats = [ 'Passenger ship','Fishing ship', 'Support ship' ,'Fast ferry']
-data_set_few =test_data[test_data['iwrap_type_from_dataset'].isin(rare_boats)]  
-data_set_few = data_set_few.reset_index(drop =True) #reset index
-#%%    
-day_1_few_vessels = get_dynamic_first_day(data_set_few, day_number = 1)  
-day_1_few_vessels.to_csv("rare_ships_day_1.csv", index = False)
+data_rare =test_data[test_data['iwrap_type_from_dataset'].isin(rare_boats)]  
+data_rare = data_rare.reset_index(drop =True) #reset index
+
+#data_set_few = data_set_few[:5] #for testing the code
+first_day = '2018-11-01'
+last_day = '2018-12-01'
+
+daterange = pd.date_range(first_day, last_day)
 
 #%%
+date = '2018-11-01'
 
-day_2_few_vessels = get_dynamic_first_day(data_set_few, day_number = 2)  
-day_2_few_vessels.to_csv("rare_ships_day_2.csv", index = False)
-
-day_3_few_vessels = get_dynamic_first_day(data_set_few, day_number = 3)  
-day_3_few_vessels.to_csv("rare_ships_day_3.csv", index = False)
-
-day_4_few_vessels = get_dynamic_first_day(data_set_few, day_number = 4)  
-day_4_few_vessels.to_csv("rare_ships_day_4.csv", index = False)
-
-
+test_date = get_dynamic_first_day(data_rare, date = date)    
+    
 
 #%%
+#getting data for rare vessel types for one day at a time
+for single_date in daterange:
+    day_format = single_date.strftime("%Y-%m-%d")
+    print (day_format)
+    try:
+        day_dynamic_data = get_dynamic_first_day(data_rare, day_format)
+        day_dynamic_data.to_csv('rare_ships{}.csv'.format(day_format))
+    except:
+        print('no data for this date', day_format)
+        pass
 
+#%%
+"""
+getting first day data from all vessels
+"""
 
 test_speed_only = get_dynamic_first_day(test_data)
 test_speed_only.to_csv("DYNAMIC_DAYS_test.csv", index = False) #saves to C:\Users\julsp - probably something with spyder
-
-#%%
-test_speed_only.to_csv("DYNAMIC_DAYS_1.csv", index = False) #saves to C:\Users\julsp - probably something with spyder
