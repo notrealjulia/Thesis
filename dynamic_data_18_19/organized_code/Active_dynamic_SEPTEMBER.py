@@ -11,6 +11,7 @@ Extracting dynamic data for September 2018 (timestamp, LAT, LON, COG and SOG val
 for all ACTIVE vessels that have => 5000 signals and merging them into one file
 
 """
+import numpy as np
 import os
 import glob
 import pandas as pd 
@@ -26,6 +27,7 @@ dynamic_path= r"C:\Users\KORAL\OneDrive - Ramboll\Documents\GitHub\Thesis\Thesis
 activeDF = static.loc[static['status'] == 'active']
 activeDF = activeDF.loc[activeDF['signals'] >= 5000]
 activeDF = activeDF.loc[activeDF['length_from_data_set'] <= 400]
+activeDF = activeDF['mmsi', 'iwrap_type_from_dataset', 'length_from_data_set', 'width' ]
 mmsis = [str(mmsi) for mmsi in activeDF['mmsi']]
 
 #%%
@@ -44,6 +46,18 @@ for mmsi in tqdm(mmsis):
     
     
 activeVesselsDF = pd.concat(activeVessels)
-activeVesselsDF.to_parquet('ActiveDynamicALL.parquet')
+activeVesselsDF['mmsi'] = activeVesselsDF['mmsi'].astype(np.int64)
+newDF = activeVesselsDF.merge(activeDF,left_on='mmsi', right_on='mmsi')
 
+
+#%%
+newDF.to_parquet('active_dynamic_September.parquet')
+
+#%%
+
+
+#%%
+trial = newDF.iloc[:1000000]
+
+#%%
 
