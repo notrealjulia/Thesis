@@ -36,21 +36,28 @@ from sklearn.metrics import mean_absolute_error
 Loading Data
 """
 path = dirname(__file__)
-data = pd.read_csv(path + "/DYNAMIC_DAYS_test.csv") 
+# data = pd.read_csv(path + "/DYNAMIC_DAYS_test.csv") 
+path = dirname(__file__)
+data_sept = pd.read_csv(path + "/dynamic_data_sept.csv") 
+data_oct = pd.read_csv(path + "/dynamic_data_oct.csv")
+
+
+
+data_all = data_sept.append(data_oct, sort = False)
 
 #%%
 """
 0.
 Pre-Processing
 """
-data_clean = data.drop(['trips'], axis=1)
+data_clean = data_all.drop(['trips'], axis=1)
 data_clean = data_clean[data_clean.iwrap_type_from_dataset != 'Other ship'] 
 data_clean = data_clean.dropna()
 data_processed = data_clean[data_clean.length_from_data_set < 400] #vessels that are over 400m do not exist
-data_processed = data_processed[data_processed.length_from_data_set > 3] #do not want to look at tiny boats
-data_processed = data_processed[data_processed.Speed_mean != 0] #boats that stad still
+# data_processed = data_processed[data_processed.length_from_data_set > 3] #do not want to look at tiny boats
+#data_processed = data_processed[data_processed.Speed_mean != 0] #boats that stad still
 data_processed = data_processed[data_processed.Speed_max <65] #boats that go faster than that are helicopters
-data_processed = data_processed[data_processed.Speed_max >2] #boats that stand still
+data_processed = data_processed[data_processed.Speed_max >0] #boats that stand still
 
 data_processed = data_processed.reset_index(drop =True) #reset index
 #%%
@@ -111,13 +118,14 @@ MAE = mean_absolute_error(y_test, y_pred)
 print("Absolute mean error for LR is {:.3f}m\n".format(MAE))
 
 ###RESULTS:
-### Cross-validation scores for linear regression:
-###  [0.54769643 0.45060054 0.5646354  0.63555399 0.61677568]
-### Mean cross validation for LR 0.563
-### Training set score: 0.561
-### Test set score: 0.525
+# Cross-validation scores for linear regression:
+#  [0.5539394  0.56108492 0.57961336 0.4761418  0.57495393]
 
-### Absolute mean error for LR is 43.786m
+# Mean cross validation for LR 0.549
+# Training set score: 0.564
+# Test set score: 0.569
+
+# Absolute mean error for LR is 35.086m
 #%%
 """
 1.
@@ -137,8 +145,8 @@ print("Lasoo Test set score: {:.3f}\n".format(lasso.score(X_test, y_test)))
 
 #combining l1 and l2
 lasso = ElasticNet().fit(X_train, y_train)
-print("Lasso Training set score: {:.3f}".format(lasso.score(X_train, y_train)))
-print("Lasoo Test set score: {:.3f}\n".format(lasso.score(X_test, y_test)))
+print("ElasticNet Training set score: {:.3f}".format(lasso.score(X_train, y_train)))
+print("ElasticNet Test set score: {:.3f}\n".format(lasso.score(X_test, y_test)))
 
 #%%
 """
@@ -162,8 +170,8 @@ best_parameters = grid_search.best_params_
 print("Mean cross-validated score of the best_estimator: {:.2f}".format(grid_search.best_score_))
 
 ### RESULTS:
-###Best parameters: {'ccp_alpha': 3, 'max_depth': 15, 'max_features': 3, 'n_estimators': 70}
-###Best cross-validation score: 0.76
+# Best parameters: {'ccp_alpha': 2, 'max_depth': 35, 'max_features': 5, 'n_estimators': 90}
+# Mean cross-validated score of the best_estimator: 0.78
 
 #%%
 """
@@ -209,15 +217,13 @@ MAE_RF = mean_absolute_error(y_test, y_pred)
 print("absolute mean error for RF is {:.3f}m\n".format(MAE_RF))
 
 #TODO get coeffiecient's meaning
+#TODO Do something to adjust overfitting
 
 #RESULTS for Random Forest:
-### Cross-validation scores:
-###  [0.74839832 0.73157665 0.71995306 0.83023156 0.77633888]
-### The mean of corss validation score is 0.761
-### Random Forest Training set score: 0.91
-### Random Forest Test set score: 0.76
-### absolute mean error for RF is 28.184m
-### note, also tried with hand picked hyper parameters, grid search is slightly better
+# Random Forest Training set score: 0.87
+# Random Forest Test set score: 0.80
+
+# absolute mean error for RF is 21.655m
 #%%
 """
 2.
@@ -252,11 +258,12 @@ MAE_GB = mean_absolute_error(y_test, y_pred)
 print("Absolute mean error for GB is {:.3f}m\n".format(MAE_GB))
 
 #RESULTS for Gradient Boosting:
-### Best parameters: {'ccp_alpha': 5, 'max_depth': 5, 'max_features': 3, 'n_estimators': 70}
-### Best cross-validation score: 0.79
-### Gradient Boosting Training set score: 0.90
-### Gradient Boosting Test set score: 0.76
-### Absolute mean error for GB is 28.577m
+# Best parameters: {'ccp_alpha': 2, 'max_depth': 10, 'max_features': 3, 'n_estimators': 90}
+# Mean cross-validated score of the best_estimator: 0.78
+# Gradient Boosting Training set score: 0.85
+# Gradient Boosting Test set score: 0.79
+
+# Absolute mean error for GB is 22.256m
 #%%
 """
 3.
@@ -264,9 +271,9 @@ Neural Network
 Grid Search - for Neural Network
 !Takes a long time
 """
-nn = MLPRegressor(max_iter = 10000, random_state=0)
+nn = MLPRegressor(max_iter = 20000, random_state=0)
 
-param_grid = {'hidden_layer_sizes': [100, 150, 200],
+param_grid = {'hidden_layer_sizes': [(100,50,10), (100,50), (100,100)],
               'alpha': [0.0001, 0.001, 0.01],}
 
 grid_search = GridSearchCV(nn, param_grid, cv=5, n_jobs =-1) #incorporates Cross validation, , n_jobs =-1 uses all PC cores
@@ -274,6 +281,9 @@ grid_search.fit(X_valid_scaled, y_valid)
 print("Best parameters: {}".format(grid_search.best_params_))
 print("Mean cross-validated score of the best_estimator: {:.2f}".format(grid_search.best_score_))
 best_parameters3 = grid_search.best_params_
+
+# Best parameters: {'alpha': 0.001, 'hidden_layer_sizes': (100, 50, 10)}
+# Mean cross-validated score of the best_estimator: 0.76
 
 #%%
 """ 
@@ -298,7 +308,7 @@ Train Test
 MAE
 """
 
-nn = MLPRegressor(max_iter = 10000, random_state=0, hidden_layer_sizes=100, alpha = 0.01)
+nn = MLPRegressor(max_iter = 20000, random_state=0, **best_parameters3)
 nn.fit(X_train_scaled, y_train)
 print("Neural Network Training set score: {:.2f}".format(nn.score(X_train_scaled, y_train)))
 print("Neural Network Test set score: {:.2f}\n".format(nn.score(X_test_scaled, y_test)))
@@ -309,10 +319,10 @@ MAE_NN = mean_absolute_error(y_test, y_pred)
 print("Absolute mean error for GB is {:.3f}m\n".format(MAE_NN))
 
 ###RESLUTS:
-### Neural Network Training set score: 0.74
-### Neural Network Test set score: 0.70
+# Neural Network Training set score: 0.81
+# Neural Network Test set score: 0.79
 
-### Absolute mean error for GB is 31.888m
+# Absolute mean error for GB is 22.680m
 
 #%%
 
@@ -405,25 +415,25 @@ print("RF absolute mean error for boat is {:.3f}m".format(rf_MAE_boat))
 print("mean length of a boat is {:.3f}m\n".format(np.mean(boat_y)))
 
 #RESULTS:
-# RF absolute mean error for Tankers is 28.183m
-# mean length of a Tanker is 179.839m
+# RF absolute mean error for Tankers is 31.740m
+# mean length of a Tanker is 155.244m
 
-# RF absolute mean error for cargo is 23.933m
-# mean length of a cargo vessel is 156.358m
+# RF absolute mean error for cargo is 22.566m
+# mean length of a cargo vessel is 128.344m
 
-# RF absolute mean error for passenger is 36.200m
-# mean length of a passenger vessel is 162.428m
+# RF absolute mean error for passenger is 15.588m
+# mean length of a passenger vessel is 122.389m
 
-# RF absolute mean error for support is 32.757m
-# mean length of a support vessel is 43.127m
+# RF absolute mean error for support is 19.032m
+# mean length of a support vessel is 30.075m
 
-# RF absolute mean error for fast_ferry is 56.831m
-# mean length of a fast_ferry vessel is 24.636m
-# max length of a fast_ferry vessel is 103.000m
-# min length of a fast_ferry vessel is 10.000m
+# RF absolute mean error for fast_ferry is 24.137m
+# mean length of a fast_ferry vessel is 18.657m
+# max length of a fast_ferry vessel is 27.000m
+# min length of a fast_ferry vessel is 13.000m
 
-# RF absolute mean error for fishing is 20.175m
-# mean length of a fishing is 24.747m
+# RF absolute mean error for fishing is 20.713m
+# mean length of a fishing is 20.107m
 
-# RF absolute mean error for boat is 9.498m
-# mean length of a boat is 14.229m
+# RF absolute mean error for boat is 12.154m
+# mean length of a boat is 15.126m

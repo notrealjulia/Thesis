@@ -18,6 +18,8 @@ dynamic_data_path = "//garbo/Afd-681/05-Technical Knowledge/05-03-Navigational S
 
 data = pd.read_csv(path + "/248595000.csv", sep='	', index_col=None, error_bad_lines=True)
 
+sept_data = pd.read_csv("//garbo/Afd-681/05-Technical Knowledge/05-03-Navigational Safety/00 Udviklingsprojekter/01 ML - Missing properties/02 Work/01 IWRAP/ML South Baltic Sea vA/export/477021900.csv", sep='	', index_col=None, error_bad_lines=True)
+
 #%%
 
 #pd.read_csv(dynamic_data_path +"/{}.csv".format(mmsi), sep="\t", index_col=None, error_bad_lines=True)
