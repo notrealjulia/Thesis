@@ -28,7 +28,7 @@ active ships with over a 5000 signals
 of a certain size 
 """
 active_subset = data[(data['status']== 'active') & (data['signals']>= 5000)]
-data_static = active_subset[['mmsi', 'iwrap_type_from_dataset', 'length_from_data_set', 'width', 'trips', 'signals']]
+data_static = active_subset[['mmsi', 'iwrap_type_from_dataset','org_type_info_from_data', 'length_from_data_set', 'width', 'trips', 'signals']]
 data_static_cleaned = data_static[(data_static['length_from_data_set'] > 2) & (data_static['width'] > 2)]
 data_static_cleaned = data_static_cleaned[data_static_cleaned['length_from_data_set'] <= 400]
 data_static_cleaned = data_static_cleaned.reset_index(drop =True) #reset index
@@ -137,26 +137,20 @@ def get_dynamic_first_day(static_data_ships_local, date):
         except:
             print("couldn't get ROT values for ship", mmsi)
             
+            
     return static_data_ships_local
-
-
-#%%
-# test_data = test_data[:30]
-# september_01_manual = get_dynamic_first_day(test_data, '2019-09-01')
 
 #%%
     
 """
-Getting data
+Getting data for specific dates
+Going by monthly basis
 """    
 
-first_day = '2019-08-01'
-last_day = '2019-08-31'
+first_day = '2019-06-01'
+last_day = '2019-06-30'
 
 daterange = pd.date_range(first_day, last_day)
-
-
-# test_data = test_data[:30]
 
 
 for single_date in daterange:
@@ -164,33 +158,19 @@ for single_date in daterange:
     print (day_format)
     try:
         day_dynamic_data = get_dynamic_first_day(test_data, day_format)
-        day_dynamic_data.to_csv('ships_AUG_{}.csv'.format(day_format), index=False)
+        day_dynamic_data.to_csv('ships_JUNE_{}.csv'.format(day_format), index=False)
     except:
         print('no data for this date', day_format)
         
 
-#%%
-"""
-Putting all the dates together
-"""
-# dynamic_data_01 = pd.read_csv("C:/Users/julsp/Documents/GitHub/Thesis/dynamic_data_18_19/organized_code/Dynamic_data/ships_SEPT_v22019-09-01.csv", error_bad_lines=False) 
-# dynamic_data_02 = pd.read_csv("C:/Users/julsp/Documents/GitHub/Thesis/dynamic_data_18_19/organized_code/Dynamic_data/ships_SEPT_v22019-09-02.csv", error_bad_lines=False) 
-
-# #dynamic_data_01 = dynamic_data_01.dropna()
-# #dynamic_data_02 = dynamic_data_02.dropna()
-
-# frames = [dynamic_data_01, dynamic_data_02]
-# dynamic_data_all = pd.concat(frames)
-# #dynamic_data_all.trips.fillna(0, inplace = True)
-# dynamic_data_all = dynamic_data_all.dropna()
-
-# dynamic_data_all = dynamic_data_all.reset_index(drop =True) #reset index
-
 
 #%%
+"""
+Putting the days together into one dataframe
+"""
 
-first_day = '2019-10-01'
-last_day = '2019-10-31'
+first_day = '2019-06-01'
+last_day = '2019-06-30'
 
 # TODO get rid of rows where all dynamic values are 0
 
@@ -199,7 +179,7 @@ daterange = pd.date_range(first_day, last_day)
 df_for_appeding = pd.DataFrame()
 
 for single_date in daterange:
-    open_df = pd.read_csv("C:/Users/julsp/Documents/GitHub/Thesis/dynamic_data_18_19/organized_code/Dynamic_data/ships_OCT_{}.csv".format(single_date.strftime("%Y-%m-%d")), error_bad_lines=False) 
+    open_df = pd.read_csv("C:/Users/julsp/Documents/GitHub/Thesis/dynamic_data_18_19/organized_code/Dynamic_data/ships_JUNE_{}.csv".format(single_date.strftime("%Y-%m-%d")), error_bad_lines=False) 
     df_for_appeding = df_for_appeding.append(open_df, sort = False)
 
 df_for_appeding.trips.fillna(0, inplace = True)
@@ -210,6 +190,42 @@ result_df = result_df[(result_df['Speed_mean'] != 0) & (result_df['ROT_mean'] !=
 # result_df = result_df.dropna()
 # result_df = result_df.reset_index(drop =True) #reset index
 
-result_df.to_csv('dynamic_data_oct.csv', index=False)
+#get rid of Undefined ships
+
+undefined_df = result_df[result_df['org_type_info_from_data'] == 'Undefined']
+result_df = result_df[result_df['org_type_info_from_data'] != 'Undefined']
+
+result_df.to_csv('dynamic_data_jun.csv', index=False)
+
+undefined_df.to_csv('undefined_jun.csv', index=False)
 
 # df_all.to_csv('Dynamic_data_Sept.csv', index=False)
+
+
+#%%
+
+"""
+Seperating unidetified vessels for the months that we forgot to include in the start
+"""
+#TODO add unidetified from june and july into it
+
+
+data_jun = pd.read_csv(path + "/dynamic_data_jun.csv")
+data_jun = data_jun.drop(['org_type_info_from_data'], axis=1)
+data_jul = pd.read_csv(path + "/dynamic_data_jul.csv")
+data_jul = data_jul.drop(['org_type_info_from_data'], axis=1)
+data_aug = pd.read_csv(path + "/dynamic_data_aug.csv")
+data_sept = pd.read_csv(path + "/dynamic_data_sept.csv") 
+data_oct = pd.read_csv(path + "/dynamic_data_oct.csv")
+
+frames = [data_jun, data_jul, data_aug, data_sept, data_oct]
+data_all = pd.concat(frames)
+
+mask = (data['org_type_info_from_data'] == 'Undefined') & (data['iwrap_type_from_dataset'] == 'Other ship')
+data_all['iwrap_type_from_dataset'][mask] = 'Undefined'
+
+data_all_unidetified = data_all[data_all['iwrap_type_from_dataset'] == 'Undefined']
+data_jun_jul_aug_sep_oct = data_all[data_all['iwrap_type_from_dataset'] != 'Undefined']
+
+data_all_unidetified.to_csv('data_all_unidetified.csv', index=False)
+data_jun_jul_aug_sep_oct.to_csv('data_jun_jul_aug_sep_oct.csv', index=False)
