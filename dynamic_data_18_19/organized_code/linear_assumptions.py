@@ -43,6 +43,22 @@ types_of_vessels = data_processed.iwrap_type_from_dataset.value_counts()
 print(types_of_vessels)
 
 
+amount_limit = 20
+
+df1 = data_processed[data_processed['iwrap_type_from_dataset'] == 'General cargo ship'][:amount_limit]
+df2 = data_processed[data_processed['iwrap_type_from_dataset'] == 'Oil products tanker'][:amount_limit]
+df3 = data_processed[data_processed['iwrap_type_from_dataset'] == 'Passenger ship'][:amount_limit]
+df4 = data_processed[data_processed['iwrap_type_from_dataset'] == 'Pleasure boat'][:amount_limit]
+df5 = data_processed[data_processed['iwrap_type_from_dataset'] == 'Other ship'][:amount_limit]
+df6 = data_processed[data_processed['iwrap_type_from_dataset'] == 'Fishing ship'][:amount_limit]
+df7 = data_processed[data_processed['iwrap_type_from_dataset'] == 'Support ship'][:5]
+df8 = data_processed[data_processed['iwrap_type_from_dataset'] == 'Fast ferry'][:5]
+
+data_processed = pd.concat([df1,df2,df3,df4,df5,df6,df7,df8]) #put it all together
+data_processed = data_processed.sample(frac=1).reset_index(drop=True) #shuffle
+data_processed = data_processed.reset_index(drop =True) #reset index
+
+
 #%%
 """
 0.
@@ -110,7 +126,8 @@ target_names = [class_0, class_1, class_2, class_3, class_4, class_5, class_6, c
 Linear relationship and homoscadacity
 """
 
-LR_1_data = data_processed[:100]
+LR_1_data = data_processed
+
 
 # ax1 = LR_1_data.plot.scatter(y = 'Speed_mean', x ='length_from_data_set', alpha = 0.3, s = 100, c = 'iwrap_type_from_dataset' )
 # ax1.set_xlabel('Length of Vessel in meters')
@@ -125,43 +142,38 @@ TODO save the plots
 LR_1_data = LR_1_data.rename({'iwrap_type_from_dataset': 'Vessel Type'}, axis=1)
 
 sns.set(font_scale=1.2)
+sns.set_style("white")
 
 ax = sns.scatterplot(x="length_from_data_set", y="Speed_mean", hue="Vessel Type", style = "Vessel Type", data=LR_1_data)
 ax.set_xlabel('Length of Vessel in m')
 ax.set_ylabel('Mean speed of vessel in kn')
 # ax.set_title('Relationship between Speed and Length of vessels \n on a subset of dynamic data')
-ax.show()
+# ax.show()
 
 #%%
 ax2 = sns.scatterplot(x="length_from_data_set", y="Speed_median", hue="Vessel Type", style = "Vessel Type",  data=LR_1_data, legend = False)
 ax2.set_xlabel('Length of Vessel in m')
 ax2.set_ylabel('Median speed of vessel in kn')
 # ax2.set_title('Relationship between Speed and Length of vessels \n on a subset of dynamic data')
-ax2.show()
+# ax2.show()
 
 #%%
 ax3 = sns.scatterplot(x="length_from_data_set", y="Speed_std", hue="Vessel Type", style = "Vessel Type",  data=LR_1_data, legend = False)
 ax3.set_xlabel('Length of Vessel in m')
-ax3.set_ylabel('Standrd deviation vessels speed in kn')
-# ax3.set_title('Relationship between Speed and Length of vessels \n on a subset of dynamic data')
-ax3.show(top=1.0,
-bottom=0.13,
-left=0.13,
-right=1.0,
-hspace=0.2,
-wspace=0.2)
+ax3.set_ylabel('Standard deviation vessels speed in kn')
+
 #%%
 ax4 = sns.scatterplot(x="length_from_data_set", y="Speed_min", hue="Vessel Type", style = "Vessel Type",  data=LR_1_data, legend = False)
 ax4.set_xlabel('Length of Vessel in m')
 ax4.set_ylabel('Minimum speed of vessel in kn')
 # ax4.set_title('Relationship between Speed and Length of vessels \n on a subset of dynamic data')
-ax4.show()
+# ax4.show()
 #%%
 ax5 = sns.scatterplot(x="length_from_data_set", y="Speed_max", hue="Vessel Type", style = "Vessel Type",  data=LR_1_data, legend = False)
 ax5.set_xlabel('Length of Vessel in m')
 ax5.set_ylabel('Maximum speed of vessel in kn')
 # ax5.set_title('Relationship between Speed and Length of vessels \n on a subset of dynamic data')
-ax5.show()
+# ax5.show()
 #%%
 """
 ROTATION
@@ -180,7 +192,7 @@ ax7.show()
 #%%
 ax8 = sns.scatterplot(x="length_from_data_set", y="ROT_std", hue="Vessel Type", style = "Vessel Type",  data=LR_1_data, legend = False)
 ax8.set_xlabel('Length of Vessel in m')
-ax8.set_ylabel('Standrad Deviation of \n Vessels Rate of Turn in deg/min')
+ax8.set_ylabel('Standard deviation vessels ROT in deg/min')
 # ax8.set_title('Relationship between Rate of Turn and Length of vessels \n on a subset of dynamic data')
 ax8.show()
 
@@ -198,59 +210,6 @@ ax10.set_ylabel('Maximum Rate of Turn of Vessel in deg/min')
 # ax10.set_title('Relationship between Rate of Turn and Length of vessels \n on a subset of dynamic data')
 ax10.show()
 
- #%%
-# ax2 = LR_1_data.plot.scatter(y = 'Speed_median', x ='length_from_data_set', alpha = 0.3, s = 100 )
-# ax2.set_xlabel('Length of Vessel in meters')
-# ax2.set_ylabel('Median speed of Vessel in knots')
-# ax2.set_title('Relationship between the Speed and the Length of the vessel \n on a subset of dynamic data')
-
-# ax3 = LR_1_data.plot.scatter(y = 'Speed_std', x ='length_from_data_set', alpha = 0.3, s = 100 )
-# ax3.set_xlabel('Length of Vessel in meters')
-# ax3.set_ylabel("Speed's standrs deviation in knots")
-# ax3.set_title('Relationship between the Speed and the Length of the vessel \n on a subset of dynamic data')
-
-
-# ax4 = LR_1_data.plot.scatter(y = 'Speed_max', x ='length_from_data_set', alpha = 0.3, s = 100 )
-# ax4.set_xlabel('Length of Vessel in meters')
-# ax4.set_ylabel("Maximum Speed of Vessel in knots")
-# ax4.set_title('Relationship between the Speed and the Length of the vessel \n on a subset of dynamic data')
-
-
-# ax5 = LR_1_data.plot.scatter(y = 'Speed_min', x ='length_from_data_set', alpha = 0.3, s = 100 )
-# ax5.set_xlabel('Length of Vessel in meters')
-# ax5.set_ylabel("Minimum Speed of Vessel in knots")
-# ax5.set_title('Relationship between the Speed and the Length of the vessel \n on a subset of dynamic data')
-
-
-# ax6 = LR_1_data.plot.scatter(y = 'ROT_mean', x ='length_from_data_set', alpha = 0.3, s = 100 )
-# ax6.set_xlabel('Length of Vessel in meters')
-# ax6.set_ylabel("Mean Rate of Turn of the vessel")
-# ax6.set_title('Relationship between the Speed and the Length of the vessel \n on a subset of dynamic data')
-
-
-# ax7 = LR_1_data.plot.scatter(y = 'ROT_median', x ='length_from_data_set', alpha = 0.3, s = 100 )
-# ax7.set_xlabel('Length of Vessel in meters')
-# # ax5.set_ylabel("Minimum Speed of Vessel in knots")
-# ax7.set_title('Relationship between the Speed and the Length of the vessel \n on a subset of dynamic data')
-
-
-# ax8 = LR_1_data.plot.scatter(y = 'ROT_std', x ='length_from_data_set', alpha = 0.3, s = 100 )
-# ax8.set_xlabel('Length of Vessel in meters')
-# # ax5.set_ylabel("Minimum Speed of Vessel in knots")
-# ax8.set_title('Relationship between the Speed and the Length of the vessel \n on a subset of dynamic data')
-
-
-# ax9 = LR_1_data.plot.scatter(y = 'ROT_max', x ='length_from_data_set', alpha = 0.3, s = 100 )
-# ax9.set_xlabel('Length of Vessel in meters')
-# # ax5.set_ylabel("Minimum Speed of Vessel in knots")
-# ax9.set_title('Relationship between the Speed and the Length of the vessel \n on a subset of dynamic data')
-
-
-# ax10 = LR_1_data.plot.scatter(y = 'ROT_min', x ='length_from_data_set', alpha = 0.3, s = 100 )
-# ax10.set_xlabel('Length of Vessel in meters')
-# # ax5.set_ylabel("Minimum Speed of Vessel in knots")
-# ax10.set_title('Relationship between the Speed and the Length of the vessel \n on a subset of dynamic data')
-
 
 #%%
 """
@@ -259,35 +218,34 @@ Normal Distribution
 """
 
 from scipy.stats import norm
-LR_2_data = data_processed[:500]
+LR_2_data = data_processed
 sns.set_color_codes()
-
+sns.set_style("white")
 
 x = LR_2_data.Speed_mean
-ax11 = sns.distplot(x, fit = norm, fit_kws={"color": "y", 'linestyle':'--', "lw": 2, "label": "Norm"}, kde_kws = {"lw": 2, "label" : "KDE"})
+ax11 = sns.distplot(x, kde_kws = {"lw": 2, "label" : "KDE"})
 ax11.set_title("Distribution of Mean Speed values of a vessel subset")
 ax11.set_xlabel("Mean Speed in knots")
 
 
 #%%
 x = LR_2_data.Speed_median
-sns.set_style("white")
-ax12 = sns.distplot(x, fit = norm, fit_kws={"color": "y", 'linestyle':'--', "lw": 2, "label": "Norm"}, kde_kws = {"lw": 2, "label" : "KDE"})
+ax12 = sns.distplot(x, kde_kws = {"lw": 2, "label" : "KDE"})
 ax12.set_title("Distribution of Median Speed values of a vessel subset")
 ax12.set_xlabel("Median Speed in knots")
 
 #%%
 
 x = LR_2_data.Speed_std
-ax13 = sns.distplot(x, fit = norm, fit_kws={"color": "y", 'linestyle':'--', "lw": 2, "label": "Norm"}, kde_kws = {"lw": 2, "label" : "KDE"})
-ax13.set_title("Distribution of Speed Standard Deviation values of a vessel subset")
+ax13 = sns.distplot(x, kde_kws = {"lw": 2, "label" : "KDE"})
+ax13.set_title("Distribution of Speed Standard Deviation values")
 ax13.set_xlabel("Standard deviation values of Speed in knots")
 
 
 #%%
 
 x = LR_2_data.Speed_min
-ax14 = sns.distplot(x, fit = norm, fit_kws={"color": "y", 'linestyle':'--', "lw": 2, "label": "Norm"}, kde_kws = {"lw": 2, "label" : "KDE"})
+ax14 = sns.distplot(x, kde_kws = {"lw": 2, "label" : "KDE"})
 ax14.set_title("Distribution Minimum Speed values of a vessel subset")
 ax14.set_xlabel("Minimal Speed in knots")
 
@@ -295,7 +253,7 @@ ax14.set_xlabel("Minimal Speed in knots")
 #%%
 
 x = LR_2_data.Speed_max
-ax15 = sns.distplot(x, fit = norm, fit_kws={"color": "y", 'linestyle':'--', "lw": 2, "label": "Norm"}, kde_kws = {"lw": 2, "label" : "KDE"})
+ax15 = sns.distplot(x, kde_kws = {"lw": 2, "label" : "KDE"})
 ax15.set_title("Distribution Maximum Speed values of a vessel subset")
 ax15.set_xlabel("Maximum Speed in knots")
 
@@ -303,7 +261,7 @@ ax15.set_xlabel("Maximum Speed in knots")
 #%%
 
 x = LR_2_data.ROT_mean
-ax16 = sns.distplot(x, fit = norm, fit_kws={"color": "y", 'linestyle':'--', "lw": 2, "label": "Norm"}, kde_kws = {"lw": 2, "label" : "KDE"})
+ax16 = sns.distplot(x,kde_kws = {"lw": 2, "label" : "KDE"})
 ax16.set_title("Mean Rate of Turn values of a vessel subset")
 ax16.set_xlabel("Mean Rate of Turn in deg/min")
 
@@ -311,27 +269,27 @@ ax16.set_xlabel("Mean Rate of Turn in deg/min")
 #%%
 
 x = LR_2_data.ROT_median
-ax17 = sns.distplot(x, fit = norm, fit_kws={"color": "y", 'linestyle':'--', "lw": 2, "label": "Norm"}, kde_kws = {"lw": 2, "label" : "KDE"})
+ax17 = sns.distplot(x,  kde_kws = {"lw": 2, "label" : "KDE"})
 ax17.set_title("Median Rate of Turn values of a vessel subset")
 ax17.set_xlabel("Median Rate of Turn in deg/min")
 #%%
 
 x = LR_2_data.ROT_std
-ax18 = sns.distplot(x, fit = norm, fit_kws={"color": "y", 'linestyle':'--', "lw": 2, "label": "Norm"}, kde_kws = {"lw": 2, "label" : "KDE"})
+ax18 = sns.distplot(x, kde_kws = {"lw": 2, "label" : "KDE"})
 ax18.set_title("Standard deviation values of a vessel subset")
 ax18.set_xlabel("Minimal Rate of Turn in deg/min")
 
 #%%
 
 x = LR_2_data.ROT_max
-ax19 = sns.distplot(x, bins = 30, fit_kws={"color": "y", 'linestyle':'--', "lw": 2, "label": "Norm"}, kde_kws = {"lw": 2, "label" : "KDE"})
+ax19 = sns.distplot(x, bins = 15, kde_kws = {"lw": 2, "label" : "KDE"})
 ax19.set_title("Maximum Rate of Turn values of a vessel subset")
 ax19.set_xlabel("Maximum Rate of Turn in deg/min")
 
 #%%
 
 x = LR_2_data.ROT_min
-ax20 = sns.distplot(x, fit = norm, fit_kws={"color": "y", 'linestyle':'--', "lw": 2, "label": "Norm"}, kde_kws = {"lw": 2, "label" : "KDE"})
+ax20 = sns.distplot(x,  kde_kws = {"lw": 2, "label" : "KDE"})
 ax20.set_title("Minimum Rate of Turn values of a vessel subset")
 ax20.set_xlabel("Minimal Rate of Turn in deg/min")
 
@@ -347,7 +305,7 @@ correlation matrix
 ax = plt.axes()
 data_for_corr = X
 corrMatrix = data_for_corr.corr()
-sns.heatmap(corrMatrix, ax = ax, center = 0, annot=True)
+sns.heatmap(corrMatrix, ax = ax, center = 0, annot=True, vmin = -1, vmax = 1, )
 ax.set_title('Correlation Matrix of Dynamic Variables from 4,000 daily vessel movements')
 plt.show()
 

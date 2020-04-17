@@ -83,14 +83,20 @@ Splitting train/test/validation
 Scaling
 """
 
+#Ecoding the labels with one-hot-encoder
+from sklearn import preprocessing
+lb = preprocessing.LabelBinarizer()
+labels = lb.fit_transform(data_processed['iwrap_type_from_dataset'])
+
 #Ecoding the labels
-lb = LabelEncoder()
-data_processed['iwrap_cat'] = lb.fit_transform(data_processed['iwrap_type_from_dataset'])
+# lb = LabelEncoder()
+# data_processed['iwrap_cat'] = lb.fit_transform(data_processed['iwrap_type_from_dataset'])
 #picking X and y and splitting
 X = data_processed[['Speed_mean', 'Speed_median', 'Speed_min', 'Speed_max', 'Speed_std', 'ROT_mean', 'ROT_median', 'ROT_min', 'ROT_max', 'ROT_std']]
-y = data_processed[['iwrap_cat']]
-y = y.values.ravel() #somethe model wants this to be an array
+# y = data_processed[['iwrap_cat']]
+# y = y.values.ravel() #somethe model wants this to be an array
 
+y = labels
 
 #split into test and train+val 
 X_trainval, X_test, y_trainval, y_test = train_test_split(X, y, test_size=0.2,  random_state=0, stratify = y)
@@ -112,6 +118,8 @@ print(np.unique(y_trainval))
 print(np.unique(y_test))
 print(np.unique(y_train))
 print(np.unique(y_valid))
+
+print(lb.classes_)
 #%%
 """
 0.
@@ -136,7 +144,7 @@ target_names = [class_0, class_1, class_2, class_3, class_4, class_5, class_6, c
 Logistic Regression 
 """
 logreg = LogisticRegression(max_iter=10000,C=0.5)
-#Validation
+# Validation
 kfold = StratifiedKFold(n_splits=5, shuffle=True, random_state=0)
 corss_val_log = cross_val_score(logreg, X_valid_scaled, y_valid, cv=kfold)
 print("Cross-validation scores for Logistic reg:\n{}".format(corss_val_log))
@@ -149,7 +157,7 @@ print("Test set score: {:.3f}\n".format(logreg.score(X_test_scaled, y_test)))
 y_pred = logreg.predict(X_test_scaled)
 
 #Classification report
-print(classification_report(y_test, y_pred, target_names=target_names))
+print(classification_report(y_test, y_pred, target_names=lb.classes_))
 print('Precision is positive predictive value \nRecall is true positive rate or sensitivity \n')
 
 # RESULTS:
@@ -443,6 +451,68 @@ print('Precision is positive predictive value \nRecall is true positive rate or 
 #            accuracy                           0.72      9599
 #           macro avg       0.65      0.52      0.56      9599
 #        weighted avg       0.71      0.72      0.70      9599
+
+# Precision is positive predictive value 
+# Recall is true positive rate or sensitivity 
+
+
+#%%
+
+from sklearn.neighbors import KNeighborsClassifier
+
+knn = KNeighborsClassifier()
+
+#Validation
+# kfold = StratifiedKFold(n_splits=5, shuffle=True, random_state=0)
+
+
+#validation and grid search
+        
+param_grid = {'n_neighbors': [4, 5, 6, 7],
+              'leaf_size': [30, 35, 10]}
+
+grid_search = GridSearchCV(knn, param_grid, cv=5, n_jobs =-1) #incorporates Cross validation, , n_jobs =-1 uses all PC cores
+grid_search.fit(X_valid_scaled, y_valid)
+print("Best parameters: {}".format(grid_search.best_params_))
+print("Mean cross-validated score of the best_estimator: {:.2f}".format(grid_search.best_score_))
+best_parameters_knn = grid_search.best_params_
+            
+
+knn_model = KNeighborsClassifier(**best_parameters_knn, weights = 'distance')
+
+# corss_val_knn = cross_val_score(knn, X_valid_scaled, y_valid, cv=kfold)
+# print("Cross-validation scores for Logistic reg:\n{}".format(corss_val_knn))
+# print("Mean cross validation for Logistic reg {:.3f}".format(np.mean(corss_val_knn)))
+
+#Training and test
+knn_model.fit(X_train_scaled, y_train)
+print("Training set score: {:.3f}".format(knn_model.score(X_train_scaled, y_train)))
+print("Test set score: {:.3f}\n".format(knn_model.score(X_test_scaled, y_test)))
+y_pred = knn_model.predict(X_test_scaled)
+
+#Classification report
+print(classification_report(y_test, y_pred, target_names=target_names))
+print('Precision is positive predictive value \nRecall is true positive rate or sensitivity \n')
+
+# Best parameters: {'leaf_size': 30, 'n_neighbors': 6}
+# Mean cross-validated score of the best_estimator: 0.66
+# Training set score: 1.000
+# Test set score: 0.693
+
+#                      precision    recall  f1-score   support
+
+#          Fast ferry       0.86      0.46      0.60        39
+#        Fishing ship       0.42      0.13      0.20       147
+#  General cargo ship       0.69      0.80      0.74      2959
+# Oil products tanker       0.47      0.34      0.40       874
+#          Other ship       0.59      0.38      0.46      1002
+#      Passenger ship       0.72      0.69      0.71      1409
+#       Pleasure boat       0.76      0.91      0.83      2659
+#        Support ship       0.58      0.36      0.45       510
+
+#            accuracy                           0.69      9599
+#           macro avg       0.64      0.51      0.55      9599
+#        weighted avg       0.68      0.69      0.68      9599
 
 # Precision is positive predictive value 
 # Recall is true positive rate or sensitivity 
