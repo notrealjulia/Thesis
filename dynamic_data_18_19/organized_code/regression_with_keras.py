@@ -62,7 +62,6 @@ X_train = scaler.fit_transform(X_train)
 X_valid = scaler.transform(X_valid)
 X_test = scaler.transform(X_test)
 
-
 #%%
 """
 1.
@@ -97,7 +96,6 @@ history = model.fit(X_train, y_train, validation_data=(X_valid, y_valid), epochs
 """
 pd.DataFrame(history.history).plot(figsize=(8, 5))
 plt.grid(True)
-#plt.gca().set_ylim(0, 1) # set the vertical range to [0-1]
 plt.show()
 
 #%%
@@ -105,6 +103,8 @@ plt.show()
 """
 1.
 More powerful model
+the model stops epochs automatically when it stops improving the results
+currelt stops at epoch 18
 """
 
 #training a new model on the same data to show the effect of increasing model capacity
@@ -127,7 +127,9 @@ history = model_mc.fit(X_train, y_train, validation_data=(X_valid, y_valid), epo
 
 pd.DataFrame(history.history).plot(figsize=(8, 5))
 plt.grid(True)
-#plt.gca().set_ylim(0, 1) # set the vertical range to [0-1]
 plt.show()
 
+"""
+ Learning curves visualisation
+"""
 
