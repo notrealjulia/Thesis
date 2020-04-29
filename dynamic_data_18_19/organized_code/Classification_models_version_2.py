@@ -8,13 +8,11 @@ Created on Thu Mar  5 17:14:51 2020
 import pandas as pd
 import sklearn 
 import numpy as np
-
 from os.path import dirname
 
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC
 from sklearn.svm import SVC
-
 
 from sklearn.metrics import classification_report
 from sklearn.preprocessing import RobustScaler
@@ -23,6 +21,7 @@ from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import StratifiedKFold
 from sklearn.preprocessing import LabelEncoder
+from sklearn.neural_network import MLPClassifier
 
 import mglearn
 
@@ -56,7 +55,7 @@ print(types_of_vessels)
 """
 0.
 Limiting each amount of vessels 
-NEURAL NETWORK doesn't need this step
+NEURAL NETWORK  and KNN doesn't need this step
 """
 
 amount_limit = 1000
@@ -96,7 +95,7 @@ X = data_processed[['Speed_mean', 'Speed_median', 'Speed_min', 'Speed_max', 'Spe
 # y = data_processed[['iwrap_cat']]
 # y = y.values.ravel() #somethe model wants this to be an array
 
-y = labels
+y = lb.inverse_transform(labels)
 
 #split into test and train+val 
 X_trainval, X_test, y_trainval, y_test = train_test_split(X, y, test_size=0.2,  random_state=0, stratify = y)
@@ -120,23 +119,7 @@ print(np.unique(y_train))
 print(np.unique(y_valid))
 
 print(lb.classes_)
-#%%
-"""
-0.
-Retrieving vessel names for Classification report
-LabelEncoder splits them up differently each time 
-There is probably an automatic way of doing this
-"""
-class_0 = data_processed.loc[data_processed['iwrap_cat'] == 0, 'iwrap_type_from_dataset'].iloc[0]
-class_1 = data_processed.loc[data_processed['iwrap_cat'] == 1, 'iwrap_type_from_dataset'].iloc[0]
-class_2 = data_processed.loc[data_processed['iwrap_cat'] == 2, 'iwrap_type_from_dataset'].iloc[0]
-class_3 = data_processed.loc[data_processed['iwrap_cat'] == 3, 'iwrap_type_from_dataset'].iloc[0]
-class_4 = data_processed.loc[data_processed['iwrap_cat'] == 4, 'iwrap_type_from_dataset'].iloc[0]
-class_5 = data_processed.loc[data_processed['iwrap_cat'] == 5, 'iwrap_type_from_dataset'].iloc[0]
-class_6 = data_processed.loc[data_processed['iwrap_cat'] == 6, 'iwrap_type_from_dataset'].iloc[0]
-class_7 = data_processed.loc[data_processed['iwrap_cat'] == 7, 'iwrap_type_from_dataset'].iloc[0]
 
-target_names = [class_0, class_1, class_2, class_3, class_4, class_5, class_6, class_7]
 
 #%%
 """
@@ -163,25 +146,25 @@ print('Precision is positive predictive value \nRecall is true positive rate or 
 # RESULTS:
 ## jun+ july + aug +sept + oct, with limit of 1000 vessels per category 
 # Cross-validation scores for Logistic reg:
-# [0.39208633 0.35018051 0.3465704  0.40794224 0.35018051]
-# Mean cross validation for Logistic reg 0.369
-# Training set score: 0.420
-# Test set score: 0.418
+# [0.37410072 0.35018051 0.36462094 0.4368231  0.39350181]
+# Mean cross validation for Logistic reg 0.384
+# Training set score: 0.386
+# Test set score: 0.403
 
 #                      precision    recall  f1-score   support
 
-#          Fast ferry       0.61      0.35      0.44        40
-#        Fishing ship       0.52      0.31      0.38       147
-#  General cargo ship       0.37      0.61      0.47       200
-# Oil products tanker       0.46      0.36      0.41       200
-#          Other ship       0.34      0.31      0.32       200
-#      Passenger ship       0.46      0.35      0.40       200
-#       Pleasure boat       0.46      0.66      0.55       200
-#        Support ship       0.36      0.30      0.33       200
+#          Fast ferry       0.55      0.28      0.37        40
+#        Fishing ship       0.45      0.36      0.40       147
+#  General cargo ship       0.36      0.63      0.46       200
+# Oil products tanker       0.39      0.34      0.36       200
+#          Other ship       0.36      0.29      0.32       200
+#      Passenger ship       0.41      0.31      0.35       200
+#       Pleasure boat       0.51      0.67      0.58       200
+#        Support ship       0.33      0.24      0.28       200
 
-#            accuracy                           0.42      1387
-#           macro avg       0.45      0.41      0.41      1387
-#        weighted avg       0.43      0.42      0.41      1387
+#            accuracy                           0.40      1387
+#           macro avg       0.42      0.39      0.39      1387
+#        weighted avg       0.40      0.40      0.39      1387
 
 # Precision is positive predictive value 
 # Recall is true positive rate or sensitivity 
@@ -210,15 +193,15 @@ print('Precision is positive predictive value \nRecall is true positive rate or 
 #        weighted avg       0.49      0.58      0.50      8517
 
 #%%
-"""
-1.
-Probabilistic results for test dataset
-TODO use this later for predicting Unidentified vessels
-"""
-prob_test_scores_logreg = logreg.predict_proba(X_test)
+# """
+# 1.
+# Probabilistic results for test dataset
+# TODO use this later for predicting Unidentified vessels
+# """
+# prob_test_scores_logreg = logreg.predict_proba(X_test)
 
-print("Predicted probabilities:\n{:.2f}%".format, prob_test_scores_logreg[:6])
-print("Sums: {}".format(logreg.predict_proba(X_test)[:6].sum(axis=1)))
+# print("Predicted probabilities:\n{:.2f}%".format, prob_test_scores_logreg[:6])
+# print("Sums: {}".format(logreg.predict_proba(X_test)[:6].sum(axis=1)))
 #%%
 """
 2.
@@ -243,7 +226,7 @@ print("Mean cross-validated score of the best_estimator: {:.2f}".format(best_sco
 print("Best parameters: ", best_parameters)
 
 #RESULTS
-# Mean cross-validated score of the best_estimator: 0.17
+# Mean cross-validated score of the best_estimator: 0.18
 # Best parameters:  {'C': 0.001, 'gamma': 0.001}
 
 #%%
@@ -260,31 +243,33 @@ print("Training set score: {:.3f}".format(svm_best.score(X_train_scaled, y_train
 print("Test set score: {:.3f}\n".format(svm_best.score(X_test_scaled, y_test)))
 
 #Classification report
-print(classification_report(y_test, svm_best.predict(X_test_scaled), target_names=target_names))
+print(classification_report(y_test, svm_best.predict(X_test_scaled), target_names=lb.classes_))
 print('Precision is positive predictive value \nRecall is true positive rate or sensitivity \n')
 
 #RESULTS WITH 1000 limit
-# Training set score: 0.163
-# Test set score: 0.158
+# Training set score: 0.162
+# Test set score: 0.163
 
 #                      precision    recall  f1-score   support
 
 #          Fast ferry       0.00      0.00      0.00        40
 #        Fishing ship       0.00      0.00      0.00       147
-#  General cargo ship       0.07      0.01      0.02       200
-# Oil products tanker       0.16      0.97      0.27       200
-#          Other ship       0.25      0.03      0.05       200
+#  General cargo ship       0.15      1.00      0.27       200
+# Oil products tanker       0.00      0.00      0.00       200
+#          Other ship       0.22      0.02      0.04       200
 #      Passenger ship       0.00      0.00      0.00       200
-#       Pleasure boat       0.22      0.06      0.09       200
-#        Support ship       0.15      0.03      0.04       200
+#       Pleasure boat       0.28      0.11      0.16       200
+#        Support ship       0.00      0.00      0.00       200
 
 #            accuracy                           0.16      1387
-#           macro avg       0.11      0.14      0.06      1387
-#        weighted avg       0.12      0.16      0.07      1387
+#           macro avg       0.08      0.14      0.06      1387
+#        weighted avg       0.10      0.16      0.07      1387
+
 #%%
 """
 3.
 Random Forest Classifier
+Hyper-paremeter tuning
 Validation
 """
 from sklearn.ensemble import RandomForestClassifier
@@ -303,13 +288,11 @@ print("Best parameters: {}".format(grid_search.best_params_))
 best_parameters = grid_search.best_params_
 print("Mean cross-validated score of the best_estimator: {:.2f}".format(grid_search.best_score_))
 
-#RESULTS: on limit of 1000
+#RESULTS: with limit of 1000
 # Best parameters: {'ccp_alpha': 2, 'max_depth': 15, 'max_features': 2, 'n_estimators': 70}
-# Mean cross-validated score of the best_estimator: 0.15
+# Mean cross-validated score of the best_estimator: 0.14
 
-# Without the limit
-# Best parameters: {'ccp_alpha': 2, 'max_depth': 15, 'max_features': 2, 'n_estimators': 70}
-# Mean cross-validated score of the best_estimator: 0.31
+
 
 #%%
 """
@@ -335,46 +318,29 @@ print('Precision is positive predictive value \nRecall is true positive rate or 
 
 #                      precision    recall  f1-score   support
 
-#          Fast ferry       0.00      0.00      0.00        21
-#        Fishing ship       0.00      0.00      0.00        75
+#          Fast ferry       0.00      0.00      0.00        40
+#        Fishing ship       0.00      0.00      0.00       147
 #  General cargo ship       0.00      0.00      0.00       200
-# Oil products tanker       0.15      1.00      0.27       200
+# Oil products tanker       0.14      1.00      0.25       200
 #          Other ship       0.00      0.00      0.00       200
 #      Passenger ship       0.00      0.00      0.00       200
 #       Pleasure boat       0.00      0.00      0.00       200
 #        Support ship       0.00      0.00      0.00       200
 
-#            accuracy                           0.15      1296
-#           macro avg       0.02      0.12      0.03      1296
-#        weighted avg       0.02      0.15      0.04      1296
-
-# Random Forest Training set score: 0.31
-# Random Forest Test set score: 0.31
-
-#                      precision    recall  f1-score   support
-
-#          Fast ferry       0.00      0.00      0.00        36
-#        Fishing ship       0.00      0.00      0.00       133
-#  General cargo ship       0.31      1.00      0.48      2679
-# Oil products tanker       0.00      0.00      0.00       788
-#          Other ship       0.00      0.00      0.00       925
-#      Passenger ship       0.00      0.00      0.00      1256
-#       Pleasure boat       0.00      0.00      0.00      2237
-#        Support ship       0.00      0.00      0.00       463
-
-#            accuracy                           0.31      8517
-#           macro avg       0.04      0.12      0.06      8517
-#        weighted avg       0.10      0.31      0.15      8517
+#            accuracy                           0.14      1387
+#           macro avg       0.02      0.12      0.03      1387
+#        weighted avg       0.02      0.14      0.04      1387
 
 # Precision is positive predictive value 
 # Recall is true positive rate or sensitivity 
+
+
 #%%
 """
 4.
 NN
 """
 
-from sklearn.neural_network import MLPClassifier
 nn_class = MLPClassifier(random_state =0, max_iter = 20000)
 
 """
@@ -407,53 +373,30 @@ print("Training set score: {:.3f}".format(nn_class.score(X_train_scaled, y_train
 print("Test set score: {:.3f}\n".format(nn_class.score(X_test_scaled, y_test)))
 
 #Classification report
-print(classification_report(y_test, nn_class.predict(X_test_scaled), target_names=target_names))
+print(classification_report(y_test, nn_class.predict(X_test_scaled), target_names=lb.classes_))
 print('Precision is positive predictive value \nRecall is true positive rate or sensitivity \n')
 
-# RESULTS: with 1000 limiting each class
-# Training set score: 0.563
-# Test set score: 0.532
-
-#                      precision    recall  f1-score   support
-
-#          Fast ferry       0.67      0.19      0.30        21
-#        Fishing ship       0.51      0.31      0.38        75
-#  General cargo ship       0.55      0.47      0.51       200
-# Oil products tanker       0.55      0.69      0.61       200
-#          Other ship       0.49      0.30      0.37       200
-#      Passenger ship       0.58      0.53      0.55       200
-#       Pleasure boat       0.54      0.77      0.64       200
-#        Support ship       0.47      0.56      0.51       200
-
-#            accuracy                           0.53      1296
-#           macro avg       0.55      0.48      0.48      1296
-#        weighted avg       0.53      0.53      0.52      1296
-
-# Precision is positive predictive value 
-# Recall is true positive rate or sensitivity 
-
-
 # RESULTS without the limit wit architecture 100,100
-# Training set score: 0.731
-# Test set score: 0.721
+# Training set score: 0.735
+# Test set score: 0.713
 
 #                      precision    recall  f1-score   support
 
-#          Fast ferry       0.67      0.41      0.51        39
-#        Fishing ship       0.54      0.10      0.17       147
-#  General cargo ship       0.70      0.84      0.76      2959
-# Oil products tanker       0.55      0.32      0.41       874
-#          Other ship       0.60      0.50      0.55      1002
-#      Passenger ship       0.74      0.73      0.73      1409
-#       Pleasure boat       0.82      0.90      0.86      2659
-#        Support ship       0.61      0.39      0.48       510
+#          Fast ferry       0.67      0.31      0.42        39
+#        Fishing ship       0.56      0.13      0.21       147
+#  General cargo ship       0.67      0.88      0.76      2959
+# Oil products tanker       0.58      0.22      0.32       874
+#          Other ship       0.60      0.45      0.52      1002
+#      Passenger ship       0.80      0.67      0.73      1409
+#       Pleasure boat       0.78      0.94      0.85      2659
+#        Support ship       0.71      0.29      0.41       510
 
-#            accuracy                           0.72      9599
-#           macro avg       0.65      0.52      0.56      9599
-#        weighted avg       0.71      0.72      0.70      9599
+#            accuracy                           0.71      9599
+#           macro avg       0.67      0.48      0.53      9599
+#        weighted avg       0.70      0.71      0.69      9599
 
 # Precision is positive predictive value 
-# Recall is true positive rate or sensitivity 
+# Recall is true positive rate or sensitivity  
 
 
 #%%
@@ -491,28 +434,28 @@ print("Test set score: {:.3f}\n".format(knn_model.score(X_test_scaled, y_test)))
 y_pred = knn_model.predict(X_test_scaled)
 
 #Classification report
-print(classification_report(y_test, y_pred, target_names=target_names))
+print(classification_report(y_test, y_pred, target_names=lb.classes_))
 print('Precision is positive predictive value \nRecall is true positive rate or sensitivity \n')
 
-# Best parameters: {'leaf_size': 30, 'n_neighbors': 6}
-# Mean cross-validated score of the best_estimator: 0.66
+# Best parameters: {'leaf_size': 30, 'n_neighbors': 7}
+# Mean cross-validated score of the best_estimator: 0.67
 # Training set score: 1.000
-# Test set score: 0.693
+# Test set score: 0.683
 
 #                      precision    recall  f1-score   support
 
-#          Fast ferry       0.86      0.46      0.60        39
-#        Fishing ship       0.42      0.13      0.20       147
-#  General cargo ship       0.69      0.80      0.74      2959
-# Oil products tanker       0.47      0.34      0.40       874
-#          Other ship       0.59      0.38      0.46      1002
-#      Passenger ship       0.72      0.69      0.71      1409
-#       Pleasure boat       0.76      0.91      0.83      2659
-#        Support ship       0.58      0.36      0.45       510
+#          Fast ferry       0.68      0.33      0.45        39
+#        Fishing ship       0.33      0.12      0.17       147
+#  General cargo ship       0.68      0.80      0.74      2959
+# Oil products tanker       0.45      0.30      0.36       874
+#          Other ship       0.57      0.39      0.46      1002
+#      Passenger ship       0.72      0.65      0.68      1409
+#       Pleasure boat       0.75      0.91      0.82      2659
+#        Support ship       0.59      0.36      0.45       510
 
-#            accuracy                           0.69      9599
-#           macro avg       0.64      0.51      0.55      9599
-#        weighted avg       0.68      0.69      0.68      9599
+#            accuracy                           0.68      9599
+#           macro avg       0.60      0.48      0.52      9599
+#        weighted avg       0.66      0.68      0.66      9599
 
 # Precision is positive predictive value 
-# Recall is true positive rate or sensitivity 
+# Recall is true positive rate or sensitivity  
