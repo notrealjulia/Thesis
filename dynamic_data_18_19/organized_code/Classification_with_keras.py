@@ -11,7 +11,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from sklearn.model_selection import train_test_split 
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, RobustScaler
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.callbacks import EarlyStopping
 
@@ -50,6 +50,21 @@ data_processed['iwrap_cat'] = lb.fit_transform(data_processed['iwrap_type_from_d
 X = data_processed[['Speed_mean', 'Speed_median', 'Speed_min', 'Speed_max', 'Speed_std', 'ROT_mean', 'ROT_median', 'ROT_min', 'ROT_max', 'ROT_std']]
 y = data_processed[['iwrap_cat']]
 y = y.values.ravel() #somethe model wants this to be an array
+unique_class = np.unique(y)
+#%%
+
+#calculating class weights
+
+from sklearn.utils import class_weight
+class_weights = class_weight.compute_class_weight(class_weight = 'balanced', classes = unique_class, y=y)
+
+#%%
+
+#need to use categorical_crossentropy as the loss function with categorical classes
+
+y = keras.utils.to_categorical(y)
+
+#%%
 
 #split into test and train+val 
 X_trainval, X_test, y_trainval, y_test = train_test_split(X, y, test_size=0.2,  random_state=0, stratify = y)
@@ -59,7 +74,8 @@ X_train, X_valid, y_train, y_valid = train_test_split(X_trainval, y_trainval, ra
 print("\nSize of training set: {}   size of validation set: {}   size of test set:" " {}\n".format(X_train.shape[0], X_valid.shape[0], X_test.shape[0]))
 
 scaler = StandardScaler()
-X_train = scaler.fit_transform(X_train)
+scaler.fit(X_train)
+X_train = scaler.transform(X_train)
 X_valid = scaler.transform(X_valid)
 X_test = scaler.transform(X_test)
 
@@ -79,18 +95,23 @@ model.add(keras.layers.Dense(100, activation="relu"))
 model.add(keras.layers.Dense(8, activation="softmax"))
 
 #compile model using mse as a measure of model performance
-model.compile(loss="sparse_categorical_crossentropy",
-              optimizer="sgd",
+model.compile(loss="categorical_crossentropy", #don't change the loss function
+              optimizer="adam",
               metrics=["accuracy"])
 
 #set early stopping monitor so the model stops training when it won't improve anymore
-early_stopping_monitor = EarlyStopping(patience=3)
+early_stopping_monitor = EarlyStopping(patience=10)
+
 
 #%%
 
 #train model
 
-history = model.fit(X_train, y_train, validation_data=(X_valid, y_valid), epochs=30, callbacks=[early_stopping_monitor])
+history = model.fit(X_train, y_train, validation_data=(X_valid, y_valid), epochs=30, class_weight=class_weights, callbacks=[early_stopping_monitor])
+
+#Ends on
+#Epoch 21/30
+#28797/28797 [==============================] - 5s 165us/sample - loss: 0.7868 - accuracy: 0.7209 - val_loss: 0.8270 - val_accuracy: 0.7114
 
 #%%
 
@@ -99,3 +120,6 @@ plt.grid(True)
 plt.xlabel("Epochs")
 plt.title("Learning rate of a Neural Network built on TensorFlow")
 plt.show()
+
+#%%
+#TODO add >>> model.evaluate(X_test, y_test)
