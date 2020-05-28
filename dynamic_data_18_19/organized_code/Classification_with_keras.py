@@ -92,6 +92,10 @@ n_cols = X_train.shape[1]
 model.add(keras.layers.Flatten(input_shape = [10]))
 model.add(keras.layers.Dense(300, activation="relu"))
 model.add(keras.layers.Dense(100, activation="relu"))
+model.add(keras.layers.Dense(32, activation="relu"))
+model.add(keras.layers.Dense(24, activation="relu"))
+model.add(keras.layers.Dense(16, activation="relu"))
+model.add(keras.layers.Dense(16, activation="relu"))
 model.add(keras.layers.Dense(8, activation="softmax"))
 
 #compile model using mse as a measure of model performance

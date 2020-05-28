@@ -151,8 +151,20 @@ ax.set_ylabel('Mean speed of vessel in kn')
 # ax.show()
 
 #%%
-ax2 = sns.scatterplot(x="length_from_data_set", y="Speed_median", hue="Vessel Type", style = "Vessel Type",  data=LR_1_data, legend = False)
-ax2.set_xlabel('Length of Vessel in m')
+
+data_processed['Speed_median_norm']=(data_processed['Speed_median']-data_processed['Speed_median'].min())/(data_processed['Speed_median'].max()-data_processed['Speed_median'].min())
+data_processed['ROT_mean_norm']=(data_processed['ROT_mean']-data_processed['ROT_mean'].min())/(data_processed['ROT_mean'].max()-data_processed['ROT_mean'].min())
+
+#%%
+ 
+LR_1_data = data_processed
+LR_1_data = LR_1_data.rename({'iwrap_type_from_dataset': 'Vessel Type'}, axis=1)
+
+sns.set(font_scale=1.2)
+sns.set_style("white")
+
+ax2 = sns.scatterplot(y="ROT_mean_norm", x="Speed_median_norm", hue="Vessel Type", style = "Vessel Type",  data=LR_1_data)
+ax2.set_xlabel('Mean rotation of vessel in deg/min')
 ax2.set_ylabel('Median speed of vessel in kn')
 # ax2.set_title('Relationship between Speed and Length of vessels \n on a subset of dynamic data')
 # ax2.show()
