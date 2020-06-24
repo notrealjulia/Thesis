@@ -25,9 +25,9 @@ Loading and pre-processing
 """
 path = dirname(__file__)
 # data without "Unidetified" vessels
-data_all = pd.read_csv(path + "/data_jun_jul_aug_sep_oct.csv")
-data_clean = data_all.drop(['trips'], axis=1)
-data_clean = data_clean.dropna()
+data_all = pd.read_csv(path + "/data_jun_jul_aug_sep_oct_withdays.csv")
+# data_clean = data_all.drop(['trips'], axis=1)
+data_clean = data_all.dropna()
 # data_clean = data_clean[data_clean.iwrap_type_from_dataset != 'Other ship'] 
 data_processed = data_clean[data_clean.length_from_data_set < 400] #vessels that are over 400m do not exist
 data_processed = data_processed[data_processed.Speed_max <65] #boats that go faster than that are helicopters
@@ -47,10 +47,15 @@ from sklearn.preprocessing import LabelEncoder
 lb = LabelEncoder()
 data_processed['iwrap_cat'] = lb.fit_transform(data_processed['iwrap_type_from_dataset'])
 #picking X and y and splitting
-X = data_processed[['Speed_mean', 'Speed_median', 'Speed_min', 'Speed_max', 'Speed_std', 'ROT_mean', 'ROT_median', 'ROT_min', 'ROT_max', 'ROT_std']]
+X = data_processed[['Speed_mean', 'Speed_median', 'Speed_min', 'Speed_max', 'Speed_std', 'ROT_mean', 'ROT_median', 'ROT_min', 'ROT_max', 'ROT_std', 'weekday']]
 y = data_processed[['iwrap_cat']]
 y = y.values.ravel() #somethe model wants this to be an array
 unique_class = np.unique(y)
+#%%
+#one hot encoding the days
+
+# X.weekday = tf.one_hot(X.weekday, depth = 7)
+
 #%%
 
 #calculating class weights
@@ -89,7 +94,7 @@ model = Sequential()
 #get number of columns in training data
 n_cols = X_train.shape[1]
 #add model layers
-model.add(keras.layers.Flatten(input_shape = [10]))
+model.add(keras.layers.Flatten(input_shape = [11]))
 model.add(keras.layers.Dense(300, activation="relu"))
 model.add(keras.layers.Dense(100, activation="relu"))
 model.add(keras.layers.Dense(32, activation="relu"))
@@ -111,7 +116,7 @@ early_stopping_monitor = EarlyStopping(patience=10)
 
 #train model
 
-history = model.fit(X_train, y_train, validation_data=(X_valid, y_valid), epochs=30, class_weight=class_weights, callbacks=[early_stopping_monitor])
+history = model.fit(X_train, y_train, validation_data=(X_valid, y_valid), epochs=100, class_weight=class_weights, callbacks=[early_stopping_monitor])
 
 #Ends on
 #Epoch 21/30

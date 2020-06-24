@@ -15,6 +15,7 @@ import numpy as np
 #%%
 """
 Loading data
+Define path to dynamic data and load the static data file
 """
 path = dirname(__file__)
 #dynamic_data_path = "//garbo/Afd-681/05-Technical Knowledge/05-03-Navigational Safety/00 Udviklingsprojekter/01 ML - Missing properties/02 Work/01 IWRAP/ML South Baltic Sea vA/export"
