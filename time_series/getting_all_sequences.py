@@ -139,7 +139,7 @@ def get_dynamic_first_day(static_data, date):
             
             #adding the sequence and the date to the static dataset
             static_data.at[i,"lon_sequence"] =  sequence_lon[0]
-            print('yes')
+            print(i, ' yes')
 
         except Exception as inst:
             pass
@@ -156,31 +156,138 @@ Getting data for specific dates
 Going by monthly basis
 """    
 
-first_day = '2019-06-11'
-last_day = '2019-06-21'
+def get_dynamic_data_for_dates(first_day, last_day): #'2019-06-11'
 
-daterange = pd.date_range(first_day, last_day)
-df_sequences_2 = pd.DataFrame()
+    # first_day = '2019-07-01'
+    # last_day = '2019-07-20'
 
-for single_date in daterange:
-    day_format = single_date.strftime("%Y-%m-%d")
-    print (day_format)
-    try:
-        day_dynamic_data = get_dynamic_first_day(data, day_format)
-        df_sequences_2 = df_sequences_2.append(day_dynamic_data, sort = False)
-    except:
-        print('no data for this date', day_format)
+    daterange = pd.date_range(first_day, last_day)
+    df_sequences = pd.DataFrame()
+
+    for single_date in daterange:
+        day_format = single_date.strftime("%Y-%m-%d")
+        print (day_format)
+        try:
+            day_dynamic_data = get_dynamic_first_day(data, day_format)
+            df_sequences = df_sequences.append(day_dynamic_data, sort = False)
+        except:
+            print('no data for this date', day_format)
+            
+    return df_sequences
         
+#%%
+        
+#get the sequence
+ 
+big_data  = get_dynamic_data_for_dates(first_day = '2019-07-01', last_day = '2019-07-30')
+           
+            
+#%%
+
+#save the sequence            
+
+#this is going to be X_test
+df_seq = big_data.dropna() #get rid of empty rows
+df_seq = df_seq.reset_index(drop =True) #reset the index - we will need this later to get the y values            
+            
 #%%
         
 #this is going to be X_test
-df_seq_1 = df_sequences.dropna()
-df_seq_1 = df_seq_1.reset_index(drop =True)
+# df_seq_1 = df_sequences.dropna() #get rid of empty rows
+# df_seq_1 = df_seq_1.reset_index(drop =True) #reset the index - we will need this later to get the y values
 
-df_test = pd.DataFrame(df_seq_1['speed_sequence'].values.tolist())
-df_test = df_test.fillna(0)
+df_speed = pd.DataFrame(df_seq['speed_sequence'].values.tolist()) #spread the sequences into a DF
+# df_test_speed = df_test_speed.fillna(0) #padd with 0
+
+df_cog = pd.DataFrame(df_seq['cog_sequence'].values.tolist())
+# df_test_cog = df_test_cog.fillna(0)
+
+df_lat = pd.DataFrame(df_seq['lat_sequence'].values.tolist())
+# df_test_lat = df_test_lat.fillna(0)
+
+df_lon = pd.DataFrame(df_seq['lon_sequence'].values.tolist())
+# df_test_lon = df_test_lon.fillna(0)
+
+# df_test_speed_min = df_test_speed.drop(df_test_speed.iloc[:, 500:], axis = 1) #cut off after 500 values, LSTM can't handle 1440
+# df_test_cog_min = df_test_cog.drop(df_test_cog.iloc[:, 500:], axis = 1)
+# df_test_lat_min = df_test_lat.drop(df_test_lat.iloc[:, 500:], axis = 1)
+# df_test_lon_min = df_test_lon.drop(df_test_lon.iloc[:, 500:], axis = 1)
+ 
+seq_path = "D:/Thesis_data/data"
+
+df_speed.to_csv(seq_path +'/all/df_speed_july.csv', index = False)
+df_cog.to_csv(seq_path +'/all/df_cog_july.csv', index = False)
+df_lat.to_csv(seq_path +'/all/df_lat_july.csv', index = False)
+df_lon.to_csv(seq_path +'/all/df_lon_july.csv', index = False)
+
+
+df_seq.to_csv(seq_path +'/all/df_Y_july.csv', index = False)
+
+
 
 #%%
+#this is going to be X_test
+X_test_array_speed = df_test_speed_min.to_numpy() #turning it into an array 
+X_test_array_cog = df_test_cog_min.to_numpy() #turning it into an array 
+X_test_array_lat = df_test_lat_min.to_numpy() #turning it into an array 
+X_test_array_lon = df_test_lon_min.to_numpy() #turning it into an array 
 
-df_test.to_csv(path +'/df_test_full.csv', index = False)
-df_seq_1.to_csv(path +'/df_seq_test_full.csv', index = False)
+
+X_test_array = np.concatenate((X_test_array_speed, X_test_array_cog, X_test_array_lat, X_test_array_lon), axis=1)
+
+#%%
+# length_test  = len(X_test_array_cog)
+
+# X_test = X_test_array.reshape(length_test, 500, 4, order = 'F')
+
+# df_test.to_csv(path +'/df_test_full.csv', index = False)
+# df_seq_1.to_csv(path +'/df_seq_test_full.csv', index = False)
+
+df_test_speed_min.to_csv(seq_path +'/df_test_speed_min.csv', index = False)
+df_test_cog_min.to_csv(seq_path +'/df_test_cog_min.csv', index = False)
+df_test_lat_min.to_csv(seq_path +'/df_test_lat_min.csv', index = False)
+df_test_lon_min.to_csv(seq_path +'/df_test_lon_min.csv', index = False)
+
+
+#%%
+#this is going to be X_train
+df_seq_2 = df_sequences_2.dropna()
+df_seq_2 = df_seq_2.reset_index(drop =True)
+
+df_seq_2.to_csv(seq_path +'/df_train_y.csv', index = False)
+
+df_train_speed = pd.DataFrame(df_seq_2['speed_sequence'].values.tolist())
+df_train_speed = df_train_speed.fillna(0)
+
+df_train_cog = pd.DataFrame(df_seq_2['cog_sequence'].values.tolist())
+df_train_cog = df_train_cog.fillna(0)
+
+df_train_lat = pd.DataFrame(df_seq_2['lat_sequence'].values.tolist())
+df_train_lat = df_train_lat.fillna(0)
+
+df_train_lon = pd.DataFrame(df_seq_2['lon_sequence'].values.tolist())
+df_train_lon = df_train_lon.fillna(0)
+
+
+df_train_speed_min = df_train_speed.drop(df_train_speed.iloc[:, 500:], axis = 1) #cut off after 500 values, LSTM can't handle 1440
+df_train_cog_min = df_train_cog.drop(df_train_cog.iloc[:, 500:], axis = 1)
+df_train_lat_min = df_train_lat.drop(df_train_lat.iloc[:, 500:], axis = 1)
+df_train_lon_min = df_train_lon.drop(df_train_lon.iloc[:, 500:], axis = 1)
+
+
+df_train_speed_min.to_csv(seq_path +'/df_train_speed_min.csv', index = False)
+df_train_cog_min.to_csv(seq_path +'/df_train_cog_min.csv', index = False)
+df_train_lat_min.to_csv(seq_path +'/df_train_lat_min.csv', index = False)
+df_train_lon_min.to_csv(seq_path +'/df_train_lon_min.csv', index = False)
+#%%
+X_train_array_speed = df_train_speed_min.to_numpy() #turning it into an array 
+X_train_array_cog = df_train_cog_min.to_numpy() #turning it into an array 
+X_train_array_lat = df_train_lat_min.to_numpy() #turning it into an array 
+X_train_array_lon = df_train_lon_min.to_numpy() #turning it into an array 
+
+
+X_train_array = np.concatenate((X_train_array_speed, X_train_array_cog, X_train_array_lat, X_train_array_lon), axis=1)
+
+length_train = len(X_train_array_cog)
+
+X_train = X_train_array.reshape(length_train, 500, 4, order = 'F')
