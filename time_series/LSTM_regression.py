@@ -87,17 +87,22 @@ X_norm = normalize(X, axis = 1)
 
 #%%
 #getting the Y values
-from sklearn.utils import class_weight
 
-lb = LabelEncoder()
-#Ecoding the labels for training
+y = df_y[['length_from_data_set']]
 
-df_y['iwrap_cat'] = lb.fit_transform(df_y['iwrap_type_from_dataset'])
-y = df_y[['iwrap_cat']]
-y = y.values.ravel() #somethe model wants this to be an array
-unique_class = np.unique(y) #for report
-class_weights = class_weight.compute_class_weight(class_weight = 'balanced', classes = unique_class, y=y)
-y = keras.utils.to_categorical(y)
+y = y.to_numpy()
+
+# from sklearn.utils import class_weight
+
+# lb = LabelEncoder()
+# #Ecoding the labels for training
+
+# df_y['iwrap_cat'] = lb.fit_transform(df_y['iwrap_type_from_dataset'])
+# y = df_y[['iwrap_cat']]
+# y = y.values.ravel() #somethe model wants this to be an array
+# unique_class = np.unique(y) #for balancing classes
+# class_weights = class_weight.compute_class_weight(class_weight = 'balanced', classes = unique_class, y=y)
+# y = keras.utils.to_categorical(y)
 
 #%%
 #Train - test split
@@ -107,19 +112,19 @@ X_train, X_test, y_train, y_test = train_test_split(X_speed, y, test_size=0.2, r
 #%%
 from tensorflow.keras.layers import Conv1D
 from tensorflow.keras.layers import MaxPooling1D
+from tensorflow.keras.optimizers import SGD, RMSprop
 
 model = Sequential()
 
-model.add(Conv1D(filters=32, kernel_size=3, padding='same', activation='relu'))
-model.add(MaxPooling1D(pool_size=2))
+# model.add(Conv1D(filters=32, kernel_size=3, padding='same', activation='relu'))
+# model.add(MaxPooling1D(pool_size=2))
 
 model.add(LSTM(units = 200))  #dropout=0.5, recurrent_dropout=0.5
-model.add(Dense(8, activation="softmax"))
-
-#compile model using mse as a measure of model performance
-model.compile(loss="categorical_crossentropy", #don't change the loss function
-              optimizer="adam",
-              metrics=["accuracy"])
+model.add(Dense(8))
+opt = SGD(learning_rate=0.1)#compile model using mse as a measure of model performance
+model.compile(loss="mse", #don't change the loss function
+              optimizer=opt,
+              metrics=['mae', 'mse', 'accuracy'])
 
 #set early stopping monitor so the model stops training when it won't improve anymore
 # early_stopping_monitor = EarlyStopping(patience=10)
@@ -127,7 +132,7 @@ model.compile(loss="categorical_crossentropy", #don't change the loss function
 
 #%%
 
-model.fit(X_train, y_train, epochs=60, validation_split=0.2, class_weight=class_weights)
+model.fit(X_train, y_train, epochs=3, validation_split=0.2)
 # Final evaluation of the model
 scores = model.evaluate(X_test, y_test, verbose=0)
 print("Accuracy: %.2f%%" % (scores[1]*100))

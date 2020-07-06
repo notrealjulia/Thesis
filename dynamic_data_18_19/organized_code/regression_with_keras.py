@@ -12,9 +12,21 @@ import matplotlib.pyplot as plt
 
 from sklearn.model_selection import train_test_split 
 from sklearn.preprocessing import StandardScaler
-
+from tensorflow.keras.utils import normalize
 import tensorflow as tf
 from tensorflow import keras
+
+from tensorflow.keras.optimizers import SGD, RMSprop
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.losses import Huber
+from tensorflow.keras.callbacks import EarlyStopping
+
+import tensorflow_docs as tfdocs
+import tensorflow_docs.plots
+import tensorflow_docs.modeling
+
+from tensorflow_docs.modeling import EpochDots
 
 #%%
 
@@ -39,28 +51,28 @@ Picking the x and y variables
 Basing on the results we got from Gradient Booster feature prioritization
 """
 
-X = data_processed[['Speed_median', 'Speed_max', 'Speed_std', 'ROT_mean', 'ROT_std']]
+X = data_processed[['Speed_mean', 'Speed_median', 'Speed_min', 'Speed_max', 'Speed_std', 'ROT_mean', 'ROT_median', 'ROT_min', 'ROT_max', 'ROT_std']]
 y = data_processed[['length_from_data_set']]
 y = y.values.ravel() #somethe model wants this to be an array
 
 #need this later for visualisation
 feature_names = ['Speed_median', 'Speed_max', 'Speed_std', 'ROT_mean', 'ROT_std']
+
+X = normalize(X, axis = 1)
 #%%
 """
 0.
 Splitting the data
 """
 #split into test and train+val 
-X_trainval, X_test, y_trainval, y_test = train_test_split(X, y, test_size=0.2,  random_state=0)
-# split train+validation set into training and validation sets
-X_train, X_valid, y_train, y_valid = train_test_split(X_trainval, y_trainval, random_state=1)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2,  random_state=0)
 
-print("\nSize of training set: {}   size of validation set: {}   size of test set:" " {}\n".format(X_train.shape[0], X_valid.shape[0], X_test.shape[0]))
+print("\nSize of training set: {}    size of test set:" " {}\n".format(X_train.shape[0], X_test.shape[0]))
 
-scaler = StandardScaler()
-X_train = scaler.fit_transform(X_train)
-X_valid = scaler.transform(X_valid)
-X_test = scaler.transform(X_test)
+#%%
+
+
+print(X_train.shape[1])
 
 #%%
 """
@@ -68,27 +80,71 @@ X_test = scaler.transform(X_test)
 Simple Model architecture 
 """
 
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense
-#create model
-model = Sequential()
 
+#%%
+
+def build_model():
+  model = keras.Sequential([
+    keras.layers.Dense(64, activation='relu', input_shape=[X_train.shape[1]]),
+    keras.layers.Dense(64, activation='relu'),
+    keras.layers.Dense(1)
+  ])
+
+  optimizer = tf.keras.optimizers.RMSprop(0.001)
+
+  model.compile(loss='mse',
+                optimizer=optimizer,
+                metrics=['mae', 'mse'])
+  return model
+
+#%%
+model = build_model()
+model.summary()
+
+
+#%%
+EPOCHS = 100
+
+history = model.fit(
+  X_train, y_train,
+  epochs=EPOCHS, validation_split = 0.2, verbose=0,
+   callbacks=[tfdocs.modeling.EpochDots()])
+
+#%%
+
+scores = model.evaluate(X_test, y_test, verbose=0)
+print(scores[1])
+
+#%%
+model = Sequential()
 #get number of columns in training data
 n_cols = X_train.shape[1]
-
 #add model layers
-model.add(Dense(10, activation='relu', input_shape=(n_cols,)))
-model.add(Dense(10, activation='relu'))
-model.add(Dense(1))
+model.add(keras.layers.Flatten(input_shape = [10]))
+model.add(keras.layers.Dense(300, activation="relu"))
+model.add(keras.layers.Dense(100, activation="relu"))
+model.add(keras.layers.Dense(32, activation="relu"))
+model.add(keras.layers.Dense(24, activation="relu"))
+model.add(keras.layers.Dense(16, activation="relu"))
+model.add(keras.layers.Dense(16, activation="relu"))
+model.add(keras.layers.Dense(1))
 
 #compile model using mse as a measure of model performance
-model.compile(optimizer='adam', loss='mean_squared_error')
+model.compile(loss=.Huber(delta=1.0, reduction="auto", name="huber_loss"), #don't change the loss function
+              optimizer=RMSprop(0.001),
+              metrics=["mse", "mae"])
 
-from tensorflow.keras.callbacks import EarlyStopping
 #set early stopping monitor so the model stops training when it won't improve anymore
-early_stopping_monitor = EarlyStopping(patience=3)
+early_stopping_monitor = EarlyStopping(patience=10)
+
+
 #train model
-history = model.fit(X_train, y_train, validation_data=(X_valid, y_valid), epochs=50, callbacks=[early_stopping_monitor])
+history = model.fit(X_train, y_train, validation_data=(X_valid, y_valid), epochs=100, callbacks=[early_stopping_monitor])
+
+#%%
+scores = model.evaluate(X_test, y_test, verbose=0)
+print(scores)
+
 
 #%%
 """

@@ -15,12 +15,10 @@ from tensorflow.keras.layers import LSTM, RNN
 from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.utils import normalize
 from sklearn.model_selection import train_test_split
-from sklearn.utils import class_weight
-
+import tensorflow 
  
 seq_path = "D:/Thesis_data/data/all"
 
-#getting the data
 df_y_1 =  pd.read_csv(seq_path + "/df_Y_june.csv") 
 df_sog_1 =  pd.read_csv(seq_path + "/df_speed_june.csv") 
 df_cog_1 =  pd.read_csv(seq_path + "/df_cog_june.csv") 
@@ -55,7 +53,7 @@ def reshaping_seq(df, limit):
     
     df = df.fillna(0)
     df = df.drop(df.iloc[:, limit:], axis = 1) #cut off after 500 values, LSTM can't handle 1440
-    array_from_df = df.to_numpy()
+    array_from_df = df.to_numpy() #needs to be np.array for the models to read it
     
     return array_from_df
 
@@ -87,7 +85,6 @@ X_norm = normalize(X, axis = 1)
 
 #%%
 #getting the Y values
-from sklearn.utils import class_weight
 
 lb = LabelEncoder()
 #Ecoding the labels for training
@@ -95,25 +92,22 @@ lb = LabelEncoder()
 df_y['iwrap_cat'] = lb.fit_transform(df_y['iwrap_type_from_dataset'])
 y = df_y[['iwrap_cat']]
 y = y.values.ravel() #somethe model wants this to be an array
-unique_class = np.unique(y) #for report
-class_weights = class_weight.compute_class_weight(class_weight = 'balanced', classes = unique_class, y=y)
+# unique_class = np.unique(y) #for report
 y = keras.utils.to_categorical(y)
+
 
 #%%
 #Train - test split
 
-X_train, X_test, y_train, y_test = train_test_split(X_speed, y, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X_norm, y, test_size=0.2, random_state=42)
 
 #%%
-from tensorflow.keras.layers import Conv1D
-from tensorflow.keras.layers import MaxPooling1D
+
 
 model = Sequential()
 
-model.add(Conv1D(filters=32, kernel_size=3, padding='same', activation='relu'))
-model.add(MaxPooling1D(pool_size=2))
 
-model.add(LSTM(units = 200))  #dropout=0.5, recurrent_dropout=0.5
+model.add(RNN(tensorflow.keras.layers.SimpleRNNCell(64)))
 model.add(Dense(8, activation="softmax"))
 
 #compile model using mse as a measure of model performance
@@ -127,11 +121,7 @@ model.compile(loss="categorical_crossentropy", #don't change the loss function
 
 #%%
 
-model.fit(X_train, y_train, epochs=60, validation_split=0.2, class_weight=class_weights)
+model.fit(X_train, y_train, epochs=3, validation_split=0.2)
 # Final evaluation of the model
 scores = model.evaluate(X_test, y_test, verbose=0)
 print("Accuracy: %.2f%%" % (scores[1]*100))
-
-#%%
-
-print(model.get_weights())
