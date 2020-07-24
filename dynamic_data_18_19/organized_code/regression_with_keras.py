@@ -81,39 +81,39 @@ Simple Model architecture
 """
 
 
-#%%
+# #%%
 
-def build_model():
-  model = keras.Sequential([
-    keras.layers.Dense(64, activation='relu', input_shape=[X_train.shape[1]]),
-    keras.layers.Dense(64, activation='relu'),
-    keras.layers.Dense(1)
-  ])
+# def build_model():
+#   model = keras.Sequential([
+#     keras.layers.Dense(64, activation='relu', input_shape=[X_train.shape[1]]),
+#     keras.layers.Dense(64, activation='relu'),
+#     keras.layers.Dense(1)
+#   ])
 
-  optimizer = tf.keras.optimizers.RMSprop(0.001)
+#   optimizer = tf.keras.optimizers.RMSprop(0.001)
 
-  model.compile(loss='mse',
-                optimizer=optimizer,
-                metrics=['mae', 'mse'])
-  return model
+#   model.compile(loss='mse',
+#                 optimizer=optimizer,
+#                 metrics=['mae', 'mse'])
+#   return model
 
-#%%
-model = build_model()
-model.summary()
+# #%%
+# model = build_model()
+# model.summary()
 
 
-#%%
-EPOCHS = 100
+# #%%
+# EPOCHS = 100
 
-history = model.fit(
-  X_train, y_train,
-  epochs=EPOCHS, validation_split = 0.2, verbose=0,
-   callbacks=[tfdocs.modeling.EpochDots()])
+# history = model.fit(
+#   X_train, y_train,
+#   epochs=EPOCHS, validation_split = 0.2, verbose=0,
+#    callbacks=[tfdocs.modeling.EpochDots()])
 
-#%%
+# #%%
 
-scores = model.evaluate(X_test, y_test, verbose=0)
-print(scores[1])
+# scores = model.evaluate(X_test, y_test, verbose=0)
+# print(scores)
 
 #%%
 model = Sequential()
@@ -130,7 +130,7 @@ model.add(keras.layers.Dense(16, activation="relu"))
 model.add(keras.layers.Dense(1))
 
 #compile model using mse as a measure of model performance
-model.compile(loss=.Huber(delta=1.0, reduction="auto", name="huber_loss"), #don't change the loss function
+model.compile(loss=Huber(delta=1.0, reduction="auto", name="huber_loss"), #don't change the loss function
               optimizer=RMSprop(0.001),
               metrics=["mse", "mae"])
 
@@ -139,12 +139,19 @@ early_stopping_monitor = EarlyStopping(patience=10)
 
 
 #train model
-history = model.fit(X_train, y_train, validation_data=(X_valid, y_valid), epochs=100, callbacks=[early_stopping_monitor])
+history = model.fit(X_train, y_train, validation_split = 0.2, epochs=100, callbacks=[early_stopping_monitor])
 
 #%%
-scores = model.evaluate(X_test, y_test, verbose=0)
-print(scores)
+y_pred = model.predict(X_test)
+# scores = model.evaluate(X_test, y_test, verbose=0)
+# print(scores)
+#%%
+from sklearn.metrics import mean_absolute_error, mean_squared_error
 
+MAE = mean_absolute_error(y_test, y_pred)
+MSE = mean_squared_error(y_test, y_pred)
+
+print("testing score: {:.3f}\n".format(model.score(X_test, y_test)))
 
 #%%
 """
